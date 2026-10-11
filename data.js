@@ -35,7 +35,7 @@ const SITE = {
       bullets: [
         "Built the front end with React and JavaScript and the backend with Node.js/Express, using MongoDB for persistence.",
         "Designed and implemented 15+ REST API endpoints for users, mails, labels, and authentication.",
-        "Implemented two-step authentication using JWT and email verification.",
+        "Implemented a two-step login flow (email, then password) with JWT-signed tokens.",
         "Implemented blacklist and Bloom Filter logic for URL validation, using multiple hash functions for space-efficient probabilistic membership checks.",
         "Used Claude Code for AI-assisted development, debugging, testing, and analysis.",
       ],
@@ -53,13 +53,13 @@ const SITE = {
       details: {
         meta: ["Team project · 3 developers", "Web + Android", "Dockerized"],
         problem: "Email is one of the most-used applications in the world, and also a main channel for phishing and malicious links. The goal was to build a complete Gmail-like platform - accounts, inbox, labels, drafts and search across web and mobile - that also protects users by blocking known-malicious URLs before a message is ever delivered, without slowing the system down.",
-        solution: "A multi-service system: a React web client and a native Android client talk to a Node.js/Express REST API backed by MongoDB. Every outgoing message is scanned by a dedicated C++ filtering server that keeps a Bloom filter of blacklisted URLs, so lookups stay fast and memory-efficient no matter how large the blacklist grows. When a user marks a mail as spam, its URLs are added to the blacklist and blocked for everyone from then on. The whole stack runs with a single docker compose command.",
+        solution: "A multi-service system: a React web client and a native Android client talk to a Node.js/Express REST API backed by MongoDB. Every outgoing message is scanned by a dedicated C++ filtering server that keeps a Bloom filter of blacklisted URLs: checking a URL costs a fixed number of hash lookups, and only possible matches are confirmed against the exact blacklist. When a user marks a mail as spam, its URLs are added to the blacklist and blocked for everyone from then on. The backend and the web app run with a single docker compose command.",
         architecture: {
-          text: "Four services on one Docker network: two clients, a REST API, a database and a C++ TCP server. The API talks to the filter over a small custom text protocol on top of TCP.",
+          text: "Four Docker services on one network - the React web app, the REST API, MongoDB and the C++ filter server - plus a native Android client that uses the same API. The API talks to the filter over a small custom text protocol on top of TCP.",
           layers: [
             [
               { name: "React Web App", tech: "React · JavaScript", note: "port 3000" },
-              { name: "Android App", tech: "Java · Android SDK", note: "API 33+" },
+              { name: "Android App", tech: "Java · Android SDK", note: "API 33+ · outside Docker" },
             ],
             [
               { name: "REST API Server", tech: "Node.js · Express · JWT", note: "18 endpoints · port 3050" },
@@ -83,11 +83,11 @@ const SITE = {
         challenges: [
           {
             challenge: "Checking every URL in every message against a growing blacklist, fast and with little memory.",
-            solution: "Implemented a Bloom filter in C++ over a configurable bit array with multiple hash functions (repeated std::hash). Lookups are O(k) regardless of blacklist size; a positive answer is double-checked against the exact blacklist, so false positives never block a legitimate mail.",
+            solution: "Implemented a Bloom filter in C++ over a configurable bit array with multiple hash functions (repeated std::hash). Each check costs k hash lookups; URLs the filter rules out never touch the blacklist, and possible matches are confirmed against the exact list so a false positive doesn't block a legitimate mail. The trade-off: with a fixed-size bit array, the false-positive rate rises as more URLs are added, and confirmations use a linear search.",
           },
           {
             challenge: "Many clients reading and updating the same filter at the same time.",
-            solution: "The C++ server accepts each TCP connection on its own thread. Shared state is guarded by a mutex and persisted to file storage, and every command reloads the latest state - so all connections see a consistent blacklist.",
+            solution: "The C++ server accepts each TCP connection on its own thread. Shared state is guarded by a mutex and persisted to file storage, and every command reloads the latest state, so all connections see a consistent blacklist. It's a simple approach that favors consistency over throughput: every command pays for file I/O and waits for a lock shared by all connections.",
           },
           {
             challenge: "Connecting a Node.js API to a C++ service.",
@@ -120,7 +120,7 @@ const SITE = {
         { src: "images/arkanoid-play.jpg", caption: "Collision detection & score logic" },
       ],
       details: {
-        meta: ["Solo project", "Java desktop game", "60 FPS game loop"],
+        meta: ["Solo project", "Java desktop game", "60 FPS target"],
         problem: "A brick-breaker game looks simple, but it is a great test of software design: many objects moving and colliding every frame, events that change the game state, and rules that must stay correct at high speed. The challenge was to build it so that adding new objects, behaviors or rules doesn't mean rewriting the game.",
         solution: "A clean, object-oriented Arkanoid in Java. Everything on screen is a Sprite, everything you can hit is a Collidable, and game rules (removing blocks, losing balls, scoring) are separate listeners that react to hit events instead of being hard-coded into the objects. Geometry, physics, objects and game rules each live in their own package.",
         architecture: {
@@ -145,12 +145,12 @@ const SITE = {
           "Pyramid of colored blocks that disappear when hit",
           "Live score indicator, with a bonus for clearing the level",
           "Game ends when all blocks are cleared or all balls are lost",
-          "Fixed 60 FPS animation loop",
+          "Animation loop targeting 60 FPS",
         ],
         challenges: [
           {
             challenge: "Fast balls passing through thin blocks between frames (\"tunneling\").",
-            solution: "Each step, the ball's movement is treated as a line segment from its current to its next position. The game finds the closest intersection with any collidable's rectangle and places the ball just before that point, so no collision is ever skipped.",
+            solution: "Each step, the ball's movement is treated as a line segment from its current to its next position. The game finds the closest intersection with any collidable's rectangle and places the ball just before that point. Compared with checking only the ball's final position, this greatly reduces balls slipping through thin blocks.",
           },
           {
             challenge: "Making the paddle feel controllable instead of a flat mirror.",
@@ -165,8 +165,8 @@ const SITE = {
             solution: "Applied the Observer pattern: blocks notify HitListeners, and separate classes handle removing blocks, removing balls and updating the score - new rules can be added without touching Ball or Block.",
           },
           {
-            challenge: "A stable frame rate on different machines.",
-            solution: "The loop measures how long each frame took and sleeps only the remaining time to hold a steady 60 frames per second.",
+            challenge: "Keeping the animation smooth.",
+            solution: "The loop targets 60 frames per second: it measures how long each frame took and sleeps only for the time left. If a frame takes longer than its 16 ms budget, that frame simply runs late.",
           },
         ],
       },
