@@ -14,10 +14,10 @@ const SITE = {
   },
 
   about: [
-    "I'm a Computer Science student at Bar-Ilan University who enjoys the whole journey of building software — from designing a clean architecture, through writing the code, to hunting down the bug that only shows up in production.",
-    "By day I work as a NOC Analyst at WeCom, keeping a live telecom network healthy: watching dashboards, triaging alerts and tracing incidents back to their root cause. It taught me how real systems behave under pressure, and I bring that mindset into every project I build.",
-    "My projects range from a full-stack email platform with a C++ filtering service to a physics-based Java game. Before university I served as a Sergeant in the Artillery Corps' C4I unit, working with embedded and encrypted communication systems.",
-    "I'm looking for a role where I can keep learning, ship meaningful work and grow as a developer.",
+    "I'm a Computer Science student at Bar-Ilan University who enjoys the entire process of building software — from designing the architecture and writing the code to debugging problems and figuring out how to make things work better.",
+    "Alongside my studies, I work as a NOC Analyst at WeCom, monitoring live telecom systems, investigating alerts, and troubleshooting network incidents. This experience has taught me the importance of reliability, attention to detail, and staying focused when solving problems under pressure.",
+    "My projects range from a full-stack email application with a C++ Bloom Filter component to a Java arcade game built using object-oriented design principles. Before university, I served as a Sergeant in the Artillery Corps' C4I unit, working with encrypted communication systems.",
+    "I'm always curious about how things work, eager to learn new technologies, and motivated by challenging problems. I'm looking for an opportunity to contribute to meaningful projects and continue growing as a software developer.",
   ],
 
   skills: {
