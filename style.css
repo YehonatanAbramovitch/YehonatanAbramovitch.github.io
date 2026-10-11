@@ -155,6 +155,10 @@ section { padding: 90px 0; }
 /* media is pinned to the cover box so its own size can't stretch the card */
 .card .thumb img, .card .thumb video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; transition: transform .4s; display: block; }
 button.thumb { border: 0; padding: 0; cursor: zoom-in; position: relative; font: inherit; }
+.thumb.has-video { position: relative; }
+.thumb.has-video video { cursor: pointer; }
+button.count { border: 0; cursor: zoom-in; line-height: inherit; transition: background .2s; }
+button.count:hover { background: rgba(123, 92, 255, .9); }
 button.thumb:hover img { transform: scale(1.05); }
 .thumb .count {
   position: absolute; z-index: 1; right: 12px; bottom: 12px; padding: 5px 10px; border-radius: 999px;

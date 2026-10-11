@@ -38,15 +38,11 @@ function startDemoVideos() {
   }), { threshold: 0.25 });
   videos.forEach((v) => {
     io.observe(v);
-    v.parentElement.addEventListener("click", (ev) => {
-      if (v.paused && v.parentElement.classList.contains("needs-tap")) {
-        ev.stopPropagation();
-        ev.preventDefault();
-        tryPlay(v);
-      }
-    }, true);
+    // tapping a paused card clip starts it (the project-page player has its own controls)
+    if (!v.controls) v.addEventListener("click", () => { if (v.paused) tryPlay(v); });
   });
 }
+const shotsLabel = (images) => `▣ ${images.length} screenshot${images.length > 1 ? "s" : ""}`;
 const list = (items, cls = "") => `<ul class="bullets ${cls}">${items.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>`;
 
 // ---------- shared: header, footer ----------
@@ -72,10 +68,16 @@ function renderHome() {
 
   $("projectGrid").innerHTML = SITE.projects.map((p, i) => `
     <article class="card" style="--accent:${accents[i % 4]}">
-      ${p.images && p.images.length
+      ${p.video
+        // with a video, tapping the cover only plays the clip; the screenshots open from the badge
+        ? `<div class="thumb has-video">
+             ${demoVideo(p.video, p.title)}
+             ${p.images && p.images.length ? `<button class="count" data-project="${i}" aria-label="View ${esc(p.title)} screenshots">${shotsLabel(p.images)}</button>` : ""}
+           </div>`
+        : p.images && p.images.length
         ? `<button class="thumb" data-project="${i}" aria-label="View ${esc(p.title)} screenshots">
-             ${p.video ? demoVideo(p.video, p.title) : `<img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}" loading="lazy">`}
-             <span class="count">▣ ${p.images.length} screenshot${p.images.length > 1 ? "s" : ""}</span>
+             <img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}" loading="lazy">
+             <span class="count">${shotsLabel(p.images)}</span>
            </button>`
         : `<div class="thumb">${esc(p.title[0])}</div>`}
       <div class="body">
@@ -99,7 +101,7 @@ function renderHome() {
       ${e.bullets ? list(e.bullets) : ""}
     </li>`).join("");
 
-  document.querySelectorAll(".thumb[data-project]").forEach((btn) =>
+  document.querySelectorAll("[data-project]").forEach((btn) =>
     btn.onclick = () => openLightbox(SITE.projects[btn.dataset.project].images, 0));
 
   // typing effect for the role
