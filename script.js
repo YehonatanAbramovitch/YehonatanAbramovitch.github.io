@@ -21,7 +21,7 @@ const chips = (items) => `<div class="chips">${items.map((t) => `<span class="ch
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const demoVideo = (v, title, onPage = false) => `
   <video src="${esc(onPage ? v.src : v.card || v.src)}" poster="${esc(v.poster)}" muted loop playsinline preload="metadata"
-    ${reduceMotion ? "" : "autoplay"} ${onPage ? "controls" : ""} ${!onPage && v.fit === "contain" ? 'class="fit-contain"' : ""}
+    ${reduceMotion ? "" : "autoplay"} ${onPage ? "controls" : ""} ${!onPage && v.fit === "contain" ? `class="fit-contain" style="background:${esc(v.bg || "#000")}"` : ""}
     aria-label="${esc(title)} demo video"></video>`;
 const list = (items, cls = "") => `<ul class="bullets ${cls}">${items.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>`;
 
