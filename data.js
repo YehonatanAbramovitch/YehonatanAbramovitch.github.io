@@ -4,7 +4,7 @@
 const SITE = {
   name: "Yehonatan Abramovitch",
   role: "Computer Science Student & Developer",
-  tagline: "From kernel schedulers to full-stack apps — I combine low-level systems knowledge with hands-on production experience.",
+  tagline: "I build full-stack applications and Java projects — and keep live telecom production systems running.",
   email: "yona132132@gmail.com",
   cvFile: "cv.pdf", // put your CV PDF next to index.html with this name
   photo: "",        // e.g. "me.jpg" — leave empty to show initials
@@ -14,43 +14,45 @@ const SITE = {
   },
 
   about: [
-    "I'm a Computer Science student at Bar-Ilan University (graduating 2027), with strong foundations in Operating Systems, Data Structures & Algorithms, Computer Networks and Object-Oriented Programming.",
-    "Today I troubleshoot live telecom infrastructure as a NOC Analyst at WeCom. Before that, I served as a Sergeant in the Artillery Corps' C4I department, managing embedded, electronic and encrypted communication systems in real-time environments.",
-    "I work with AI-assisted development workflows (Claude Code, Cursor) for architecture, test automation and data analysis.",
+    "I'm a Computer Science student at Bar-Ilan University (expected graduation 2027), with experience building full-stack applications and Java projects, alongside monitoring live telecom production systems as a NOC Analyst at WeCom.",
+    "I have strong foundations in Data Structures & Algorithms, OOP, Operating Systems, networking and Machine Learning fundamentals. I've built REST APIs, authentication flows and a C++ Bloom Filter component.",
+    "Before university, I served as a Sergeant in the Artillery Corps' C4I department, managing embedded computing, electronics and encrypted wireless communication systems in mission-critical, real-time environments.",
   ],
 
   skills: {
     "Languages": ["Python", "C++", "C", "Java", "JavaScript"],
-    "Systems & OS": ["Linux", "xv6 kernel", "Multitasking OS", "Embedded Systems"],
-    "Networking & Security": ["TCP/IP", "OSI Model", "Encryption", "JWT Auth", "Monitoring"],
-    "DevOps & Tools": ["Git", "GitHub", "CI/CD", "REST APIs", "JetBrains", "VS Code"],
-    "AI & Applied": ["Claude Code", "Cursor", "Test Automation", "Log Analysis", "Root Cause Analysis"],
+    "Software & Web": ["React", "Node.js/Express", "REST APIs", "MongoDB", "JWT", "OOP"],
+    "Development & Testing": ["Data Structures & Algorithms", "Git", "Docker", "CMake", "GoogleTest", "Unit testing"],
+    "AI & ML Foundations": ["Machine Learning", "Neural networks", "Claude Code", "AI-assisted dev"],
+    "Systems & Networking": ["Linux", "TCP/IP", "Grafana", "Zabbix", "Incident triage", "Production troubleshooting"],
   },
 
   projects: [
     {
-      title: "Priority Scheduler (xv6)",
-      description: "Modified the xv6 kernel to implement a priority-based process scheduler, including Process Control Block changes and OS-level debugging of resource management, MMU and system calls.",
-      tags: ["C", "xv6", "Operating Systems", "Kernel"],
-      github: "",
+      title: "Gmail-Like Full-Stack App",
+      description: "A web & mobile email application with a React front end and a Node.js/Express backend on MongoDB. 15+ REST API endpoints for users, mails, labels and authentication; two-step authentication with JWT and email verification; and URL validation via a blacklist and a Bloom Filter with multiple hash functions. Built with Claude Code for AI-assisted development, debugging and testing.",
+      tags: ["React", "Node.js", "Express", "MongoDB", "JWT", "C++", "Android", "Docker"],
+      github: "https://github.com/YehonatanAbramovitch/Gmail",
       demo: "",
-      image: "",
+      // images: list of { src, caption } — the first one is the card cover
+      images: [
+        { src: "images/mail-compose.jpg", caption: "Inbox & compose new email" },
+        { src: "images/mail-search.jpg", caption: "Search results across mail" },
+        { src: "images/mail-welcome.jpg", caption: "Welcome screen" },
+        { src: "images/mail-register.jpg", caption: "Registration — choose an address" },
+        { src: "images/mail-password.jpg", caption: "Registration — password setup" },
+      ],
     },
     {
-      title: "Full-Stack Security App",
-      description: "A secure web/mobile application with JWT authentication and email verification, 15+ REST API endpoints and optimized MongoDB schemas. Built with Claude Code for architecture and automated testing.",
-      tags: ["JavaScript", "REST API", "MongoDB", "JWT"],
-      github: "",
+      title: "Enhanced Arkanoid (Java)",
+      description: "An Arkanoid game built and refactored in Java using OOP principles and reusable design patterns. Implemented collision detection, game logic, levels, sprites and event-driven interactions, and improved modularity and runtime stability by separating game entities and responsibilities.",
+      tags: ["Java", "OOP", "Design Patterns", "Game Dev"],
+      github: "https://github.com/YehonatanAbramovitch/Akanoid-Game",
       demo: "",
-      image: "",
-    },
-    {
-      title: "Enhanced Arkanoid",
-      description: "A Java Arkanoid game refactored with advanced OOP design patterns, with optimized physics and collision detection for stable frame rates — from algorithmic design to deployment.",
-      tags: ["Java", "OOP", "Design Patterns"],
-      github: "",
-      demo: "",
-      image: "",
+      images: [
+        { src: "images/arkanoid-start.jpg", caption: "Game initialization — multi-ball level" },
+        { src: "images/arkanoid-play.jpg", caption: "Collision detection & score logic" },
+      ],
     },
   ],
 
@@ -59,19 +61,19 @@ const SITE = {
       when: "2026 — Present",
       title: "NOC Analyst",
       place: "WeCom",
-      text: "Monitor network performance and availability, and troubleshoot real-time connectivity and infrastructure issues across telecom infrastructure using failure-pattern recognition.",
+      text: "Monitor network performance and system availability using Grafana and Zabbix. Triage real-time alerts, connectivity failures and infrastructure issues in a live telecom production environment, applying structured debugging and failure-pattern analysis to find root causes, resolve incidents and escalate while maintaining service reliability.",
     },
     {
-      when: "2023 — 2027",
+      when: "2023 — 2027 (expected)",
       title: "B.Sc. Computer Science",
       place: "Bar-Ilan University",
-      text: "Operating Systems, Data Structures & Algorithms, Computer Networks, Object-Oriented Programming.",
+      text: "Data Structures & Algorithms, OOP, Operating Systems, networking, Machine Learning.",
     },
     {
       when: "2017 — 2020",
       title: "Sergeant, C4I Department",
       place: "IDF Artillery Corps",
-      text: "Managed embedded computing, electronics and encrypted wireless communication systems in mission-critical, real-time environments.",
+      text: "Managed embedded computing, electronics and encrypted wireless communication systems in mission-critical, real-time military environments.",
     },
   ],
 };

@@ -37,7 +37,12 @@ $("skills").innerHTML = Object.entries(SITE.skills).map(([group, items], i) => `
 
 $("projectGrid").innerHTML = SITE.projects.map((p, i) => `
   <article class="card" style="--accent:${accents[i % 4]}">
-    <div class="thumb">${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.title)} screenshot">` : esc(p.title[0])}</div>
+    ${p.images && p.images.length
+      ? `<button class="thumb" data-project="${i}" aria-label="View ${esc(p.title)} screenshots">
+           <img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}" loading="lazy">
+           <span class="count">▣ ${p.images.length} screenshot${p.images.length > 1 ? "s" : ""}</span>
+         </button>`
+      : `<div class="thumb">${esc(p.title[0])}</div>`}
     <div class="body">
       <h4>${esc(p.title)}</h4>
       <p>${esc(p.description)}</p>
@@ -56,6 +61,31 @@ $("timeline").innerHTML = SITE.experience.map((e, i) => `
     <div class="place">${esc(e.place)}</div>
     <p>${esc(e.text)}</p>
   </li>`).join("");
+
+// screenshot lightbox
+const lb = $("lightbox");
+let lbImages = [], lbIndex = 0;
+function showSlide(n) {
+  lbIndex = (n + lbImages.length) % lbImages.length;
+  const img = lbImages[lbIndex];
+  $("lbImg").src = img.src;
+  $("lbImg").alt = img.caption;
+  $("lbCaption").textContent = `${img.caption}  ·  ${lbIndex + 1} / ${lbImages.length}`;
+  lb.classList.toggle("single", lbImages.length < 2);
+}
+document.querySelectorAll(".thumb[data-project]").forEach((btn) => btn.onclick = () => {
+  lbImages = SITE.projects[btn.dataset.project].images;
+  showSlide(0);
+  lb.showModal();
+});
+$("lbPrev").onclick = () => showSlide(lbIndex - 1);
+$("lbNext").onclick = () => showSlide(lbIndex + 1);
+$("lbClose").onclick = () => lb.close();
+lb.onclick = (e) => { if (e.target === lb) lb.close(); };
+lb.onkeydown = (e) => {
+  if (e.key === "ArrowLeft") showSlide(lbIndex - 1);
+  if (e.key === "ArrowRight") showSlide(lbIndex + 1);
+};
 
 // typing effect for the role
 (function type(i = 0) {
