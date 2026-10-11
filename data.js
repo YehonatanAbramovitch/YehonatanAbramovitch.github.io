@@ -188,7 +188,7 @@ const SITE = {
       when: "2023 - 2027 (expected)",
       title: "B.Sc. Computer Science",
       place: "Bar-Ilan University",
-      text: "Computer Science, expanded track. A rigorous program combining theory and hands-on engineering - from algorithms and mathematical foundations to building real systems in C, C++, Java, Python and JavaScript, in both solo and team projects.",
+      text: "An expanded Computer Science program at Bar-Ilan University, covering the theoretical and practical foundations of computing, including algorithms, software development, computer systems, and mathematics.",
       bullets: [
         "Core CS: Introduction to Computer Science, Data Structures, Algorithms, Object-Oriented Programming, Programming Languages, Automata and Formal Languages",
         "Systems: Operating Systems, Computer Architecture, Advanced System Programming, Database Systems",
