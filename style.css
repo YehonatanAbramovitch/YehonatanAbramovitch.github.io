@@ -157,6 +157,11 @@ section { padding: 90px 0; }
 button.thumb { border: 0; padding: 0; cursor: zoom-in; position: relative; font: inherit; }
 .thumb.has-video { position: relative; }
 .thumb.has-video video { cursor: pointer; }
+/* iOS Safari draws its own play button on blocked inline videos and can leave it on screen;
+   card clips have no controls, so hide it (our own tap mark is shown only while needed) */
+.thumb.has-video video::-webkit-media-controls,
+.thumb.has-video video::-webkit-media-controls-start-playback-button,
+.thumb.has-video video::-webkit-media-controls-overlay-play-button { display: none !important; -webkit-appearance: none; }
 button.count { border: 0; cursor: zoom-in; line-height: inherit; transition: background .2s; }
 button.count:hover { background: rgba(123, 92, 255, .9); }
 button.thumb:hover img { transform: scale(1.05); }

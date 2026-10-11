@@ -38,6 +38,8 @@ function startDemoVideos() {
   }), { threshold: 0.25 });
   videos.forEach((v) => {
     io.observe(v);
+    // hide the tap mark as soon as frames actually play (more reliable on iOS than the play() promise)
+    v.addEventListener("playing", () => v.parentElement.classList.remove("needs-tap"));
     // tapping a paused card clip starts it (the project-page player has its own controls)
     if (!v.controls) v.addEventListener("click", () => { if (v.paused) tryPlay(v); });
   });
