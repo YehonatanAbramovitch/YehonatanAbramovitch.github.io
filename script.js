@@ -17,12 +17,36 @@ function socialsHTML() {
   return links.join("");
 }
 const chips = (items) => `<div class="chips">${items.map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</div>`;
-// muted looping demo clip; with "reduce motion" it only shows the poster until played
-const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+// muted looping demo clip; started from JS (see startDemoVideos) since mobile browsers often ignore autoplay
 const demoVideo = (v, title, onPage = false) => `
-  <video src="${esc(onPage ? v.src : v.card || v.src)}" poster="${esc(v.poster)}" muted loop playsinline preload="metadata"
-    ${reduceMotion ? "" : "autoplay"} ${onPage ? "controls" : ""} ${!onPage && v.fit === "contain" ? `class="fit-contain" style="background:${esc(v.bg || "#000")}"` : ""}
+  <video src="${esc(onPage ? v.src : v.card || v.src)}" poster="${esc(v.poster)}" muted loop playsinline autoplay preload="auto"
+    ${onPage ? "controls" : ""} ${!onPage && v.fit === "contain" ? `class="fit-contain" style="background:${esc(v.bg || "#000")}"` : ""}
     aria-label="${esc(title)} demo video"></video>`;
+
+// play demo videos while on screen, pause them off screen; if the browser blocks autoplay
+// (e.g. iOS Low Power Mode) mark the cover so a single tap starts it
+function startDemoVideos() {
+  const videos = document.querySelectorAll("video[autoplay]");
+  const tryPlay = (v) => {
+    v.muted = true;
+    const p = v.play();
+    if (p) p.then(() => v.parentElement.classList.remove("needs-tap"))
+            .catch(() => v.parentElement.classList.add("needs-tap"));
+  };
+  const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.isIntersecting) tryPlay(e.target); else e.target.pause();
+  }), { threshold: 0.25 });
+  videos.forEach((v) => {
+    io.observe(v);
+    v.parentElement.addEventListener("click", (ev) => {
+      if (v.paused && v.parentElement.classList.contains("needs-tap")) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        tryPlay(v);
+      }
+    }, true);
+  });
+}
 const list = (items, cls = "") => `<ul class="bullets ${cls}">${items.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>`;
 
 // ---------- shared: header, footer ----------
@@ -181,6 +205,7 @@ lb.onkeydown = (e) => {
 };
 
 if (page === "project") renderProject(); else renderHome();
+startDemoVideos();
 
 // ---------- theme toggle (remembers choice) ----------
 const root = document.documentElement;
