@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project</title>
+  <meta name="description" content="Project case study">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=4">
+</head>
+<body data-page="project">
+  <div class="blobs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="nav">
+    <a href="index.html" class="logo" id="logo"></a>
+    <nav>
+      <a href="index.html#about">About</a>
+      <a href="index.html#projects">Projects</a>
+      <a href="index.html#experience">Experience</a>
+      <a href="index.html#contact">Contact</a>
+    </nav>
+    <button class="theme" id="themeBtn" aria-label="Toggle theme">◐</button>
+  </header>
+
+  <main id="project" class="project-page"></main>
+
+  <footer><span id="footName"></span> · <span id="year"></span></footer>
+
+  <dialog id="lightbox" class="lightbox">
+    <button class="lb-close" id="lbClose" aria-label="Close">✕</button>
+    <button class="lb-nav prev" id="lbPrev" aria-label="Previous">‹</button>
+    <figure>
+      <img id="lbImg" alt="">
+      <figcaption id="lbCaption"></figcaption>
+    </figure>
+    <button class="lb-nav next" id="lbNext" aria-label="Next">›</button>
+  </dialog>
+
+  <!-- bump ?v= on each update so browsers fetch fresh files -->
+  <script src="data.js?v=4"></script>
+  <script src="script.js?v=4"></script>
+</body>
+</html>

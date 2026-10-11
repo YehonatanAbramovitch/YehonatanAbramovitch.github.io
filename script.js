@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const accents = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)"];
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const page = document.body.dataset.page;
 
 const icons = {
   github: '<svg viewBox="0 0 24 24"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z"/></svg>',
@@ -15,54 +16,138 @@ function socialsHTML() {
   links.push(`<a href="mailto:${esc(SITE.email)}" aria-label="email">${icons.email}</a>`);
   return links.join("");
 }
+const chips = (items) => `<div class="chips">${items.map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</div>`;
+const list = (items, cls = "") => `<ul class="bullets ${cls}">${items.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>`;
 
+// ---------- shared: header, footer ----------
 const initials = SITE.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-document.title = `${SITE.name} — ${SITE.role}`;
 $("logo").textContent = initials;
-$("name").textContent = SITE.name;
-$("tagline").textContent = SITE.tagline;
-$("avatar").innerHTML = SITE.photo ? `<img src="${esc(SITE.photo)}" alt="${esc(SITE.name)}">` : initials;
-$("cvBtn").href = SITE.cvFile;
-$("mailBtn").href = `mailto:${SITE.email}`;
-$("mailBtn").textContent = SITE.email;
-$("heroSocials").innerHTML = $("footSocials").innerHTML = socialsHTML();
 $("footName").textContent = SITE.name;
 $("year").textContent = new Date().getFullYear();
 
-$("aboutText").innerHTML = SITE.about.map((p) => `<p>${esc(p)}</p>`).join("");
-$("skills").innerHTML = Object.entries(SITE.skills).map(([group, items], i) => `
-  <div><h4>${esc(group)}</h4><div class="chips" style="--accent:${accents[i % 4]}">
-    ${items.map((s) => `<span class="chip">${esc(s)}</span>`).join("")}
-  </div></div>`).join("");
+// ---------- home page ----------
+function renderHome() {
+  document.title = `${SITE.name} — ${SITE.role}`;
+  $("name").textContent = SITE.name;
+  $("tagline").textContent = SITE.tagline;
+  $("avatar").innerHTML = SITE.photo ? `<img src="${esc(SITE.photo)}" alt="${esc(SITE.name)}">` : initials;
+  $("cvBtn").href = SITE.cvFile;
+  $("mailBtn").href = `mailto:${SITE.email}`;
+  $("mailBtn").textContent = SITE.email;
+  $("heroSocials").innerHTML = $("footSocials").innerHTML = socialsHTML();
 
-$("projectGrid").innerHTML = SITE.projects.map((p, i) => `
-  <article class="card" style="--accent:${accents[i % 4]}">
-    ${p.images && p.images.length
-      ? `<button class="thumb" data-project="${i}" aria-label="View ${esc(p.title)} screenshots">
-           <img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}" loading="lazy">
-           <span class="count">▣ ${p.images.length} screenshot${p.images.length > 1 ? "s" : ""}</span>
-         </button>`
-      : `<div class="thumb">${esc(p.title[0])}</div>`}
-    <div class="body">
-      <h4>${esc(p.title)}</h4>
-      <p>${esc(p.description)}</p>
-      <div class="chips">${p.tags.map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</div>
-      <div class="links">
-        ${p.github ? `<a href="${esc(p.github)}" target="_blank" rel="noopener">Code →</a>` : ""}
-        ${p.demo ? `<a href="${esc(p.demo)}" target="_blank" rel="noopener">Live demo →</a>` : ""}
+  $("aboutText").innerHTML = SITE.about.map((p) => `<p>${esc(p)}</p>`).join("");
+  $("skills").innerHTML = Object.entries(SITE.skills).map(([group, items], i) => `
+    <div style="--accent:${accents[i % 4]}"><h4>${esc(group)}</h4>${chips(items)}</div>`).join("");
+
+  $("projectGrid").innerHTML = SITE.projects.map((p, i) => `
+    <article class="card" style="--accent:${accents[i % 4]}">
+      ${p.images && p.images.length
+        ? `<button class="thumb" data-project="${i}" aria-label="View ${esc(p.title)} screenshots">
+             <img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}" loading="lazy">
+             <span class="count">▣ ${p.images.length} screenshot${p.images.length > 1 ? "s" : ""}</span>
+           </button>`
+        : `<div class="thumb">${esc(p.title[0])}</div>`}
+      <div class="body">
+        <h4>${esc(p.title)}</h4>
+        ${list(p.bullets)}
+        ${chips(p.tags)}
+        <div class="actions">
+          ${p.details ? `<a class="btn small primary" href="project.html?id=${esc(p.id)}">View project →</a>` : ""}
+          ${p.github ? `<a class="btn small" href="${esc(p.github)}" target="_blank" rel="noopener">${icons.github} Code</a>` : ""}
+          ${p.demo ? `<a class="btn small" href="${esc(p.demo)}" target="_blank" rel="noopener">Live demo</a>` : ""}
+        </div>
       </div>
-    </div>
-  </article>`).join("");
+    </article>`).join("");
 
-$("timeline").innerHTML = SITE.experience.map((e, i) => `
-  <li style="--accent:${accents[i % 4]}">
-    <span class="when">${esc(e.when)}</span>
-    <h4>${esc(e.title)}</h4>
-    <div class="place">${esc(e.place)}</div>
-    <p>${esc(e.text)}</p>
-  </li>`).join("");
+  $("timeline").innerHTML = SITE.experience.map((e, i) => `
+    <li style="--accent:${accents[i % 4]}">
+      <span class="when">${esc(e.when)}</span>
+      <h4>${esc(e.title)}</h4>
+      <div class="place">${esc(e.place)}</div>
+      ${e.text ? `<p>${esc(e.text)}</p>` : ""}
+      ${e.bullets ? list(e.bullets) : ""}
+    </li>`).join("");
 
-// screenshot lightbox
+  document.querySelectorAll(".thumb[data-project]").forEach((btn) =>
+    btn.onclick = () => openLightbox(SITE.projects[btn.dataset.project].images, 0));
+
+  // typing effect for the role
+  (function type(i = 0) {
+    $("role").textContent = SITE.role.slice(0, i);
+    if (i < SITE.role.length) setTimeout(() => type(i + 1), 70);
+  })();
+}
+
+// ---------- project detail page ----------
+function renderProject() {
+  const id = new URLSearchParams(location.search).get("id");
+  const idx = SITE.projects.findIndex((p) => p.id === id);
+  const p = SITE.projects[idx];
+  if (!p || !p.details) {
+    $("project").innerHTML = `<p class="notfound">Project not found. <a href="index.html#projects">Back to projects →</a></p>`;
+    return;
+  }
+  const d = p.details;
+  document.title = `${p.title} — ${SITE.name}`;
+  document.body.style.setProperty("--accent", accents[idx % 4]);
+
+  const section = (n, title, html) => `
+    <section class="p-section reveal"><h3 class="section-title"><span class="mono">${n}</span> ${title}</h3>${html}</section>`;
+
+  const arch = `
+    <p class="lead">${esc(d.architecture.text)}</p>
+    <div class="arch">
+      ${d.architecture.layers.map((row) => `
+        <div class="arch-row">
+          ${row.map((b) => `
+            <div class="arch-box">
+              <strong>${esc(b.name)}</strong>
+              <span class="mono">${esc(b.tech)}</span>
+              ${b.note ? `<small>${esc(b.note)}</small>` : ""}
+            </div>`).join("")}
+        </div>`).join('<div class="arch-arrow" aria-hidden="true">↓</div>')}
+    </div>`;
+
+  const challenges = `<div class="challenges">${d.challenges.map((c, i) => `
+    <div class="challenge">
+      <div class="c-q"><span class="mono">#${i + 1}</span> ${esc(c.challenge)}</div>
+      <div class="c-a"><span class="label">Solution</span>${esc(c.solution)}</div>
+    </div>`).join("")}</div>`;
+
+  const shots = `<div class="shots">${p.images.map((img, i) => `
+    <figure><button class="shot" data-i="${i}" aria-label="Enlarge: ${esc(img.caption)}"><img src="${esc(img.src)}" alt="${esc(img.caption)}" loading="lazy"></button>
+    <figcaption>${esc(img.caption)}</figcaption></figure>`).join("")}</div>`;
+
+  const links = `
+    ${p.github ? `<a class="btn primary" href="${esc(p.github)}" target="_blank" rel="noopener">${icons.github} View code on GitHub</a>` : ""}
+    ${p.demo ? `<a class="btn" href="${esc(p.demo)}" target="_blank" rel="noopener">Live demo ↗</a>` : ""}`;
+
+  $("project").innerHTML = `
+    <a class="back" href="index.html#projects">← All projects</a>
+    <header class="p-hero">
+      <div class="meta">${d.meta.map((m) => `<span>${esc(m)}</span>`).join("")}</div>
+      <h1>${esc(p.title)}</h1>
+      ${chips(p.tags)}
+      <div class="cta">${links}</div>
+      ${p.images.length ? `<button class="p-cover shot" data-i="0" aria-label="Enlarge screenshot"><img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}"></button>` : ""}
+    </header>
+    ${section("01.", "The problem", `<p class="lead">${esc(d.problem)}</p>`)}
+    ${section("02.", "My solution", `<p class="lead">${esc(d.solution)}</p>`)}
+    ${section("03.", "Architecture", arch)}
+    ${section("04.", "Key features", list(d.features, "features"))}
+    ${section("05.", "Technical challenges", challenges)}
+    ${section("06.", "Screenshots", shots)}
+    <section class="p-section p-end reveal">
+      <h3>Want to see how it works?</h3>
+      <div class="cta">${links}</div>
+      <a class="back" href="index.html#projects">← Back to all projects</a>
+    </section>`;
+
+  document.querySelectorAll(".shot").forEach((b) => b.onclick = () => openLightbox(p.images, +b.dataset.i));
+}
+
+// ---------- screenshot lightbox ----------
 const lb = $("lightbox");
 let lbImages = [], lbIndex = 0;
 function showSlide(n) {
@@ -73,11 +158,11 @@ function showSlide(n) {
   $("lbCaption").textContent = `${img.caption}  ·  ${lbIndex + 1} / ${lbImages.length}`;
   lb.classList.toggle("single", lbImages.length < 2);
 }
-document.querySelectorAll(".thumb[data-project]").forEach((btn) => btn.onclick = () => {
-  lbImages = SITE.projects[btn.dataset.project].images;
-  showSlide(0);
+function openLightbox(images, start) {
+  lbImages = images;
+  showSlide(start);
   lb.showModal();
-});
+}
 $("lbPrev").onclick = () => showSlide(lbIndex - 1);
 $("lbNext").onclick = () => showSlide(lbIndex + 1);
 $("lbClose").onclick = () => lb.close();
@@ -87,13 +172,9 @@ lb.onkeydown = (e) => {
   if (e.key === "ArrowRight") showSlide(lbIndex + 1);
 };
 
-// typing effect for the role
-(function type(i = 0) {
-  $("role").textContent = SITE.role.slice(0, i);
-  if (i < SITE.role.length) setTimeout(() => type(i + 1), 70);
-})();
+if (page === "project") renderProject(); else renderHome();
 
-// theme toggle (remembers choice)
+// ---------- theme toggle (remembers choice) ----------
 const root = document.documentElement;
 try {
   const saved = localStorage.getItem("theme");
@@ -105,8 +186,8 @@ $("themeBtn").onclick = () => {
   try { localStorage.setItem("theme", root.dataset.theme); } catch {}
 };
 
-// reveal sections on scroll
+// ---------- reveal sections on scroll ----------
 const io = new IntersectionObserver((entries) => entries.forEach((e) => {
   if (e.isIntersecting) { e.target.classList.add("visible"); io.unobserve(e.target); }
-}), { threshold: 0.12 });
+}), { threshold: 0.08 });
 document.querySelectorAll(".reveal").forEach((el) => io.observe(el));

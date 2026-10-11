@@ -4,7 +4,7 @@
 const SITE = {
   name: "Yehonatan Abramovitch",
   role: "Computer Science Student & Developer",
-  tagline: "I build full-stack applications and Java projects — and keep live telecom production systems running.",
+  tagline: "Building software. Solving problems. Always learning.",
   email: "yona132132@gmail.com",
   cvFile: "cv.pdf", // put your CV PDF next to index.html with this name
   photo: "",        // e.g. "me.jpg" — leave empty to show initials
@@ -14,9 +14,9 @@ const SITE = {
   },
 
   about: [
-    "I'm a Computer Science student at Bar-Ilan University (expected graduation 2027), with experience building full-stack applications and Java projects, alongside monitoring live telecom production systems as a NOC Analyst at WeCom.",
-    "I have strong foundations in Data Structures & Algorithms, OOP, Operating Systems, networking and Machine Learning fundamentals. I've built REST APIs, authentication flows and a C++ Bloom Filter component.",
-    "Before university, I served as a Sergeant in the Artillery Corps' C4I department, managing embedded computing, electronics and encrypted wireless communication systems in mission-critical, real-time environments.",
+    "I'm a Computer Science student at Bar-Ilan University who enjoys the whole journey of building software — from designing a clean architecture, through writing the code, to hunting down the bug that only shows up in production.",
+    "By day I work as a NOC Analyst at WeCom, keeping a live telecom network healthy: watching dashboards, triaging alerts and tracing incidents back to their root cause. It taught me how real systems behave under pressure, and I bring that mindset into every project I build.",
+    "My projects range from a full-stack email platform with a C++ filtering service to a physics-based Java game. Before university I served as a Sergeant in the Artillery Corps' C4I unit, working with embedded and encrypted communication systems. I'm looking for a role where I can keep learning, ship meaningful work and grow as an engineer.",
   ],
 
   skills: {
@@ -29,8 +29,15 @@ const SITE = {
 
   projects: [
     {
-      title: "Gmail-Like Full-Stack App",
-      description: "A web & mobile email application with a React front end and a Node.js/Express backend on MongoDB. 15+ REST API endpoints for users, mails, labels and authentication; two-step authentication with JWT and email verification; and URL validation via a blacklist and a Bloom Filter with multiple hash functions. Built with Claude Code for AI-assisted development, debugging and testing.",
+      id: "gmail",
+      title: "Gmail-Like Full-Stack Web & Mobile Application",
+      bullets: [
+        "Built the front end with React and JavaScript and the backend with Node.js/Express, using MongoDB for persistence.",
+        "Designed and implemented 15+ REST API endpoints for users, mails, labels, and authentication.",
+        "Implemented two-step authentication using JWT and email verification.",
+        "Implemented blacklist and Bloom Filter logic for URL validation, using multiple hash functions for space-efficient probabilistic membership checks.",
+        "Used Claude Code for AI-assisted development, debugging, testing, and analysis.",
+      ],
       tags: ["React", "Node.js", "Express", "MongoDB", "JWT", "C++", "Android", "Docker"],
       github: "https://github.com/YehonatanAbramovitch/Gmail",
       demo: "",
@@ -42,10 +49,68 @@ const SITE = {
         { src: "images/mail-register.jpg", caption: "Registration — choose an address" },
         { src: "images/mail-password.jpg", caption: "Registration — password setup" },
       ],
+      details: {
+        meta: ["Team project · 3 developers", "Web + Android", "Dockerized"],
+        problem: "Email is one of the most-used applications in the world, and also a main channel for phishing and malicious links. The goal was to build a complete Gmail-like platform — accounts, inbox, labels, drafts and search across web and mobile — that also protects users by blocking known-malicious URLs before a message is ever delivered, without slowing the system down.",
+        solution: "A multi-service system: a React web client and a native Android client talk to a Node.js/Express REST API backed by MongoDB. Every outgoing message is scanned by a dedicated C++ filtering server that keeps a Bloom filter of blacklisted URLs, so lookups stay fast and memory-efficient no matter how large the blacklist grows. When a user marks a mail as spam, its URLs are added to the blacklist and blocked for everyone from then on. The whole stack runs with a single docker compose command.",
+        architecture: {
+          text: "Four services on one Docker network: two clients, a REST API, a database and a C++ TCP server. The API talks to the filter over a small custom text protocol on top of TCP.",
+          layers: [
+            [
+              { name: "React Web App", tech: "React · JavaScript", note: "port 3000" },
+              { name: "Android App", tech: "Java · Android SDK", note: "API 33+" },
+            ],
+            [
+              { name: "REST API Server", tech: "Node.js · Express · JWT", note: "18 endpoints · port 3050" },
+            ],
+            [
+              { name: "MongoDB", tech: "Mongoose · Docker volume", note: "users, mails, labels" },
+              { name: "URL Filter Server", tech: "C++ · TCP sockets · threads", note: "Bloom filter + blacklist" },
+            ],
+          ],
+        },
+        features: [
+          "Multi-step registration with email-availability check, password setup and profile picture",
+          "Two-step login (email, then password) issuing a JWT-signed user token",
+          "Inbox, Sent, Drafts, All Mail, Spam and Trash categories",
+          "Compose to multiple recipients, with drafts saved automatically on close",
+          "Custom labels — create, rename, delete and apply to messages",
+          "Search across subject and body of all your mail",
+          "Report as spam → the mail's URLs are blacklisted and blocked in future messages",
+          "Native Android client sharing the same backend",
+        ],
+        challenges: [
+          {
+            challenge: "Checking every URL in every message against a growing blacklist, fast and with little memory.",
+            solution: "Implemented a Bloom filter in C++ over a configurable bit array with multiple hash functions (repeated std::hash). Lookups are O(k) regardless of blacklist size; a positive answer is double-checked against the exact blacklist, so false positives never block a legitimate mail.",
+          },
+          {
+            challenge: "Many clients reading and updating the same filter at the same time.",
+            solution: "The C++ server accepts each TCP connection on its own thread. Shared state is guarded by a mutex and persisted to file storage, and every command reloads the latest state — so all connections see a consistent blacklist.",
+          },
+          {
+            challenge: "Connecting a Node.js API to a C++ service.",
+            solution: "Designed a lightweight line-based protocol over TCP (an initialization line with the filter size and hash settings, then POST / GET / DELETE commands) returning HTTP-style status codes, wrapped in Promises on the Node side.",
+          },
+          {
+            challenge: "Keeping the C++ code testable and extensible.",
+            solution: "Built it around interfaces and factories — parsers, commands, storage, output and formatters are all swappable — which made it possible to unit-test every component with GoogleTest and CMake.",
+          },
+          {
+            challenge: "Running four services reliably on any machine.",
+            solution: "Containerized every service with its own Dockerfile and wired them together with Docker Compose on a shared bridge network, with a persistent volume for MongoDB.",
+          },
+        ],
+      },
     },
     {
-      title: "Enhanced Arkanoid (Java)",
-      description: "An Arkanoid game built and refactored in Java using OOP principles and reusable design patterns. Implemented collision detection, game logic, levels, sprites and event-driven interactions, and improved modularity and runtime stability by separating game entities and responsibilities.",
+      id: "arkanoid",
+      title: "Enhanced Arkanoid Game",
+      bullets: [
+        "Built and refactored the game in Java using OOP principles and reusable design patterns.",
+        "Implemented collision detection, game logic, levels, sprites, and event-driven interactions.",
+        "Improved modularity and runtime stability by separating game entities and responsibilities.",
+      ],
       tags: ["Java", "OOP", "Design Patterns", "Game Dev"],
       github: "https://github.com/YehonatanAbramovitch/Akanoid-Game",
       demo: "",
@@ -53,6 +118,57 @@ const SITE = {
         { src: "images/arkanoid-start.jpg", caption: "Game initialization — multi-ball level" },
         { src: "images/arkanoid-play.jpg", caption: "Collision detection & score logic" },
       ],
+      details: {
+        meta: ["Solo project", "Java desktop game", "60 FPS game loop"],
+        problem: "A brick-breaker game looks simple, but it is a great test of software design: many objects moving and colliding every frame, events that change the game state, and rules that must stay correct at high speed. The challenge was to build it so that adding new objects, behaviors or rules doesn't mean rewriting the game.",
+        solution: "A clean, object-oriented Arkanoid in Java. Everything on screen is a Sprite, everything you can hit is a Collidable, and game rules (removing blocks, losing balls, scoring) are separate listeners that react to hit events instead of being hard-coded into the objects. Geometry, physics, objects and game rules each live in their own package.",
+        architecture: {
+          text: "Five packages with one responsibility each. The game loop only knows the interfaces; game rules subscribe to hit events (Observer pattern).",
+          layers: [
+            [
+              { name: "GameMain", tech: "Game · game loop", note: "initializes level, runs at 60 FPS" },
+            ],
+            [
+              { name: "Objects", tech: "Sprite · Collidable", note: "Ball, Block, Paddle, GameEnvironment" },
+              { name: "GameUpdating", tech: "HitListener implementations", note: "BlockRemover, BallRemover, Score" },
+            ],
+            [
+              { name: "MovingAndMechanics", tech: "Velocity · CollisionInfo", note: "HitNotifier / HitListener" },
+              { name: "GeometricPrimitives", tech: "Point · Line · Rectangle", note: "intersections & math" },
+            ],
+          ],
+        },
+        features: [
+          "Multiple balls in play at once, each with its own velocity",
+          "Keyboard-controlled paddle with 5 hit regions that change the bounce angle",
+          "Pyramid of colored blocks that disappear when hit",
+          "Live score indicator, with a bonus for clearing the level",
+          "Game ends when all blocks are cleared or all balls are lost",
+          "Fixed 60 FPS animation loop",
+        ],
+        challenges: [
+          {
+            challenge: "Fast balls passing through thin blocks between frames (\"tunneling\").",
+            solution: "Each step, the ball's movement is treated as a line segment from its current to its next position. The game finds the closest intersection with any collidable's rectangle and places the ball just before that point, so no collision is ever skipped.",
+          },
+          {
+            challenge: "Making the paddle feel controllable instead of a flat mirror.",
+            solution: "Split the paddle into five regions; each returns a new velocity at a different angle (Velocity.fromAngleAndSpeed), so the player can aim the ball.",
+          },
+          {
+            challenge: "Removing blocks and balls while the game is iterating over them.",
+            solution: "Sprites and hit listeners are iterated over copies of their lists, so objects can safely remove themselves during a hit event.",
+          },
+          {
+            challenge: "Keeping game rules out of the game objects.",
+            solution: "Applied the Observer pattern: blocks notify HitListeners, and separate classes handle removing blocks, removing balls and updating the score — new rules can be added without touching Ball or Block.",
+          },
+          {
+            challenge: "A stable frame rate on different machines.",
+            solution: "The loop measures how long each frame took and sleeps only the remaining time to hold a steady 60 frames per second.",
+          },
+        ],
+      },
     },
   ],
 
@@ -61,13 +177,24 @@ const SITE = {
       when: "2026 — Present",
       title: "NOC Analyst",
       place: "WeCom",
-      text: "Monitor network performance and system availability using Grafana and Zabbix. Triage real-time alerts, connectivity failures and infrastructure issues in a live telecom production environment, applying structured debugging and failure-pattern analysis to find root causes, resolve incidents and escalate while maintaining service reliability.",
+      bullets: [
+        "Monitor network performance and system availability using Grafana and Zabbix.",
+        "Triage real-time alerts, connectivity failures, and infrastructure issues in a live telecommunications production environment.",
+        "Apply structured debugging and failure-pattern analysis to identify root causes, resolve incidents, and escalate issues while maintaining service reliability.",
+      ],
     },
     {
       when: "2023 — 2027 (expected)",
       title: "B.Sc. Computer Science",
       place: "Bar-Ilan University",
-      text: "Data Structures & Algorithms, OOP, Operating Systems, networking, Machine Learning.",
+      text: "A rigorous program combining theory and hands-on engineering — from algorithms and mathematical foundations to building real systems in C, C++, Java, Python and JavaScript, in both solo and team projects.",
+      bullets: [
+        "Core CS: Data Structures, Algorithms, Object-Oriented Programming, Advanced Programming",
+        "Systems: Operating Systems, Computer Networks, Linux and low-level programming in C/C++",
+        "AI: Machine Learning and neural network fundamentals",
+        "Math foundations: Discrete Mathematics, Linear Algebra, Calculus, Probability",
+        "Course projects include the Gmail-like platform (team, Advanced Programming) and the Arkanoid game (OOP)",
+      ],
     },
     {
       when: "2017 — 2020",
