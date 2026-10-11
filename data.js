@@ -42,6 +42,9 @@ const SITE = {
       tags: ["React", "Node.js", "Express", "MongoDB", "JWT", "C++", "Android", "Docker"],
       github: "https://github.com/YehonatanAbramovitch/Gmail",
       demo: "",
+      // short muted demo clip shown on the card and project page
+      // card: shorter clip for the project card; fit: "contain" shows the whole frame on the card
+      video: { src: "images/gmail-demo.mp4", card: "images/gmail-card.mp4", poster: "images/gmail-demo-poster.jpg" },
       // images: list of { src, caption } - the first one is the card cover
       images: [
         { src: "images/mail-compose.jpg", caption: "Inbox & compose new email" },
@@ -115,6 +118,7 @@ const SITE = {
       tags: ["Java", "OOP", "Design Patterns", "Game Dev"],
       github: "https://github.com/YehonatanAbramovitch/Akanoid-Game",
       demo: "",
+      video: { src: "images/arkanoid-demo.mp4", poster: "images/arkanoid-demo-poster.jpg", fit: "contain" },
       images: [
         { src: "images/arkanoid-start.jpg", caption: "Game initialization - multi-ball level" },
         { src: "images/arkanoid-play.jpg", caption: "Collision detection & score logic" },

@@ -17,6 +17,12 @@ function socialsHTML() {
   return links.join("");
 }
 const chips = (items) => `<div class="chips">${items.map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</div>`;
+// muted looping demo clip; with "reduce motion" it only shows the poster until played
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const demoVideo = (v, title, onPage = false) => `
+  <video src="${esc(onPage ? v.src : v.card || v.src)}" poster="${esc(v.poster)}" muted loop playsinline preload="metadata"
+    ${reduceMotion ? "" : "autoplay"} ${onPage ? "controls" : ""} ${!onPage && v.fit === "contain" ? 'class="fit-contain"' : ""}
+    aria-label="${esc(title)} demo video"></video>`;
 const list = (items, cls = "") => `<ul class="bullets ${cls}">${items.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>`;
 
 // ---------- shared: header, footer ----------
@@ -44,7 +50,7 @@ function renderHome() {
     <article class="card" style="--accent:${accents[i % 4]}">
       ${p.images && p.images.length
         ? `<button class="thumb" data-project="${i}" aria-label="View ${esc(p.title)} screenshots">
-             <img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}" loading="lazy">
+             ${p.video ? demoVideo(p.video, p.title) : `<img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}" loading="lazy">`}
              <span class="count">▣ ${p.images.length} screenshot${p.images.length > 1 ? "s" : ""}</span>
            </button>`
         : `<div class="thumb">${esc(p.title[0])}</div>`}
@@ -130,7 +136,9 @@ function renderProject() {
       <h1>${esc(p.title)}</h1>
       ${chips(p.tags)}
       <div class="cta">${links}</div>
-      ${p.images.length ? `<button class="p-cover shot" data-i="0" aria-label="Enlarge screenshot"><img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}"></button>` : ""}
+      ${p.video
+        ? `<div class="p-cover p-video">${demoVideo(p.video, p.title, true)}</div>`
+        : p.images.length ? `<button class="p-cover shot" data-i="0" aria-label="Enlarge screenshot"><img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}"></button>` : ""}
     </header>
     ${section("01.", "The problem", `<p class="lead">${esc(d.problem)}</p>`)}
     ${section("02.", "My solution", `<p class="lead">${esc(d.solution)}</p>`)}
