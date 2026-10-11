@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio</title>
+  <meta name="description" content="Personal portfolio">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="blobs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="nav">
+    <a href="#top" class="logo" id="logo"></a>
+    <nav>
+      <a href="#about">About</a>
+      <a href="#projects">Projects</a>
+      <a href="#experience">Experience</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <button class="theme" id="themeBtn" aria-label="Toggle theme">◐</button>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="avatar" id="avatar"></div>
+      <p class="hello mono">Hi, I'm</p>
+      <h1 id="name"></h1>
+      <h2 class="role"><span id="role"></span><span class="cursor">_</span></h2>
+      <p class="tagline" id="tagline"></p>
+      <div class="cta">
+        <a class="btn primary" href="#projects">See my work</a>
+        <a class="btn" id="cvBtn" target="_blank" rel="noopener">Download CV</a>
+      </div>
+      <div class="socials" id="heroSocials"></div>
+    </section>
+
+    <section id="about" class="reveal">
+      <h3 class="section-title"><span class="mono">01.</span> About me</h3>
+      <div class="about-grid">
+        <div id="aboutText"></div>
+        <div id="skills" class="skills"></div>
+      </div>
+    </section>
+
+    <section id="projects" class="reveal">
+      <h3 class="section-title"><span class="mono">02.</span> Projects</h3>
+      <div id="projectGrid" class="projects"></div>
+    </section>
+
+    <section id="experience" class="reveal">
+      <h3 class="section-title"><span class="mono">03.</span> Experience & Education</h3>
+      <ol id="timeline" class="timeline"></ol>
+    </section>
+
+    <section id="contact" class="reveal contact">
+      <h3 class="section-title"><span class="mono">04.</span> Let's talk</h3>
+      <p>I'm open to new opportunities. My inbox is always open.</p>
+      <a class="btn primary big" id="mailBtn"></a>
+      <div class="socials" id="footSocials"></div>
+    </section>
+  </main>
+
+  <footer><span id="footName"></span> · <span id="year"></span></footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
