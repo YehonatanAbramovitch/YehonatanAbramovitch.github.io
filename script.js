@@ -27,7 +27,7 @@ $("year").textContent = new Date().getFullYear();
 
 // ---------- home page ----------
 function renderHome() {
-  document.title = `${SITE.name} — ${SITE.role}`;
+  document.title = `${SITE.name} - ${SITE.role}`;
   $("name").textContent = SITE.name;
   $("tagline").textContent = SITE.tagline;
   $("avatar").innerHTML = SITE.photo ? `<img src="${esc(SITE.photo)}" alt="${esc(SITE.name)}">` : initials;
@@ -89,7 +89,7 @@ function renderProject() {
     return;
   }
   const d = p.details;
-  document.title = `${p.title} — ${SITE.name}`;
+  document.title = `${p.title} - ${SITE.name}`;
   document.body.style.setProperty("--accent", accents[idx % 4]);
 
   const section = (n, title, html) => `

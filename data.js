@@ -1,5 +1,5 @@
 // ============================================================
-//  EDIT THIS FILE ONLY — all site content lives here.
+//  EDIT THIS FILE ONLY - all site content lives here.
 // ============================================================
 const SITE = {
   name: "Yehonatan Abramovitch",
@@ -7,14 +7,14 @@ const SITE = {
   tagline: "Building software. Solving problems. Always learning.",
   email: "yona132132@gmail.com",
   cvFile: "cv.pdf", // put your CV PDF next to index.html with this name
-  photo: "",        // e.g. "me.jpg" — leave empty to show initials
+  photo: "",        // e.g. "me.jpg" - leave empty to show initials
   socials: {
     github: "https://github.com/YehonatanAbramovitch",
     linkedin: "https://www.linkedin.com/in/yehonatan-abramovitch",
   },
 
   about: [
-    "I'm a Computer Science student at Bar-Ilan University who enjoys the entire process of building software — from designing the architecture and writing the code to debugging problems and figuring out how to make things work better.",
+    "I'm a Computer Science student at Bar-Ilan University who enjoys the entire process of building software - from designing the architecture and writing the code to debugging problems and figuring out how to make things work better.",
     "Alongside my studies, I work as a NOC Analyst at WeCom, monitoring live telecom systems, investigating alerts, and troubleshooting network incidents. This experience has taught me the importance of reliability, attention to detail, and staying focused when solving problems under pressure.",
     "My projects range from a full-stack email application with a C++ Bloom Filter component to a Java arcade game built using object-oriented design principles. Before university, I served as a Sergeant in the Artillery Corps' C4I unit, working with encrypted communication systems.",
     "I'm always curious about how things work, eager to learn new technologies, and motivated by challenging problems. I'm looking for an opportunity to contribute to meaningful projects and continue growing as a software developer.",
@@ -42,17 +42,17 @@ const SITE = {
       tags: ["React", "Node.js", "Express", "MongoDB", "JWT", "C++", "Android", "Docker"],
       github: "https://github.com/YehonatanAbramovitch/Gmail",
       demo: "",
-      // images: list of { src, caption } — the first one is the card cover
+      // images: list of { src, caption } - the first one is the card cover
       images: [
         { src: "images/mail-compose.jpg", caption: "Inbox & compose new email" },
         { src: "images/mail-search.jpg", caption: "Search results across mail" },
         { src: "images/mail-welcome.jpg", caption: "Welcome screen" },
-        { src: "images/mail-register.jpg", caption: "Registration — choose an address" },
-        { src: "images/mail-password.jpg", caption: "Registration — password setup" },
+        { src: "images/mail-register.jpg", caption: "Registration - choose an address" },
+        { src: "images/mail-password.jpg", caption: "Registration - password setup" },
       ],
       details: {
         meta: ["Team project · 3 developers", "Web + Android", "Dockerized"],
-        problem: "Email is one of the most-used applications in the world, and also a main channel for phishing and malicious links. The goal was to build a complete Gmail-like platform — accounts, inbox, labels, drafts and search across web and mobile — that also protects users by blocking known-malicious URLs before a message is ever delivered, without slowing the system down.",
+        problem: "Email is one of the most-used applications in the world, and also a main channel for phishing and malicious links. The goal was to build a complete Gmail-like platform - accounts, inbox, labels, drafts and search across web and mobile - that also protects users by blocking known-malicious URLs before a message is ever delivered, without slowing the system down.",
         solution: "A multi-service system: a React web client and a native Android client talk to a Node.js/Express REST API backed by MongoDB. Every outgoing message is scanned by a dedicated C++ filtering server that keeps a Bloom filter of blacklisted URLs, so lookups stay fast and memory-efficient no matter how large the blacklist grows. When a user marks a mail as spam, its URLs are added to the blacklist and blocked for everyone from then on. The whole stack runs with a single docker compose command.",
         architecture: {
           text: "Four services on one Docker network: two clients, a REST API, a database and a C++ TCP server. The API talks to the filter over a small custom text protocol on top of TCP.",
@@ -75,7 +75,7 @@ const SITE = {
           "Two-step login (email, then password) issuing a JWT-signed user token",
           "Inbox, Sent, Drafts, All Mail, Spam and Trash categories",
           "Compose to multiple recipients, with drafts saved automatically on close",
-          "Custom labels — create, rename, delete and apply to messages",
+          "Custom labels - create, rename, delete and apply to messages",
           "Search across subject and body of all your mail",
           "Report as spam → the mail's URLs are blacklisted and blocked in future messages",
           "Native Android client sharing the same backend",
@@ -87,7 +87,7 @@ const SITE = {
           },
           {
             challenge: "Many clients reading and updating the same filter at the same time.",
-            solution: "The C++ server accepts each TCP connection on its own thread. Shared state is guarded by a mutex and persisted to file storage, and every command reloads the latest state — so all connections see a consistent blacklist.",
+            solution: "The C++ server accepts each TCP connection on its own thread. Shared state is guarded by a mutex and persisted to file storage, and every command reloads the latest state - so all connections see a consistent blacklist.",
           },
           {
             challenge: "Connecting a Node.js API to a C++ service.",
@@ -95,7 +95,7 @@ const SITE = {
           },
           {
             challenge: "Keeping the C++ code testable and extensible.",
-            solution: "Built it around interfaces and factories — parsers, commands, storage, output and formatters are all swappable — which made it possible to unit-test every component with GoogleTest and CMake.",
+            solution: "Built it around interfaces and factories - parsers, commands, storage, output and formatters are all swappable - which made it possible to unit-test every component with GoogleTest and CMake.",
           },
           {
             challenge: "Running four services reliably on any machine.",
@@ -116,7 +116,7 @@ const SITE = {
       github: "https://github.com/YehonatanAbramovitch/Akanoid-Game",
       demo: "",
       images: [
-        { src: "images/arkanoid-start.jpg", caption: "Game initialization — multi-ball level" },
+        { src: "images/arkanoid-start.jpg", caption: "Game initialization - multi-ball level" },
         { src: "images/arkanoid-play.jpg", caption: "Collision detection & score logic" },
       ],
       details: {
@@ -162,7 +162,7 @@ const SITE = {
           },
           {
             challenge: "Keeping game rules out of the game objects.",
-            solution: "Applied the Observer pattern: blocks notify HitListeners, and separate classes handle removing blocks, removing balls and updating the score — new rules can be added without touching Ball or Block.",
+            solution: "Applied the Observer pattern: blocks notify HitListeners, and separate classes handle removing blocks, removing balls and updating the score - new rules can be added without touching Ball or Block.",
           },
           {
             challenge: "A stable frame rate on different machines.",
@@ -175,7 +175,7 @@ const SITE = {
 
   experience: [
     {
-      when: "2026 — Present",
+      when: "2026 - Present",
       title: "NOC Analyst",
       place: "WeCom",
       bullets: [
@@ -185,10 +185,10 @@ const SITE = {
       ],
     },
     {
-      when: "2023 — 2027 (expected)",
+      when: "2023 - 2027 (expected)",
       title: "B.Sc. Computer Science",
       place: "Bar-Ilan University",
-      text: "A rigorous program combining theory and hands-on engineering — from algorithms and mathematical foundations to building real systems in C, C++, Java, Python and JavaScript, in both solo and team projects.",
+      text: "A rigorous program combining theory and hands-on engineering - from algorithms and mathematical foundations to building real systems in C, C++, Java, Python and JavaScript, in both solo and team projects.",
       bullets: [
         "Core CS: Data Structures, Algorithms, Object-Oriented Programming, Advanced Programming",
         "Systems: Operating Systems, Computer Networks, Linux and low-level programming in C/C++",
@@ -198,7 +198,7 @@ const SITE = {
       ],
     },
     {
-      when: "2017 — 2020",
+      when: "2017 - 2020",
       title: "Sergeant, C4I Department",
       place: "IDF Artillery Corps",
       text: "Managed embedded computing, electronics and encrypted wireless communication systems in mission-critical, real-time military environments.",
