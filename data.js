@@ -43,8 +43,8 @@ const SITE = {
       github: "https://github.com/YehonatanAbramovitch/Gmail",
       demo: "",
       // short muted demo clip shown on the card and project page
-      // card: shorter clip for the project card; fit: "contain" shows the whole frame on the card
-      video: { src: "images/gmail-demo.mp4", card: "images/gmail-card.mp4", poster: "images/gmail-demo-poster.jpg", fit: "contain", bg: "#f8fafd" },
+      // card (optional): a different clip for the project card; fit: "contain" shows the whole frame on the card
+      video: { src: "images/gmail-demo.mp4", poster: "images/gmail-demo-poster.jpg", fit: "contain", bg: "#f8fafd" },
       // images: list of { src, caption } - the first one is the card cover
       images: [
         { src: "images/mail-compose.jpg", caption: "Inbox & compose new email" },
