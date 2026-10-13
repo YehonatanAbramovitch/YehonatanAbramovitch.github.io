@@ -38,7 +38,7 @@ a { color: inherit; text-decoration: none; }
 .mono { font-family: "JetBrains Mono", monospace; }
 
 /* background: a trip through space. Three star layers (tiles drawn in script.js) move at different speeds as you
-   scroll, so near stars pass faster than far ones; two soft nebulas take the current section's colors.
+   scroll, so near stars pass faster than far ones.
    Everything moves with transform only, so scrolling stays on the compositor. Light mode is a dawn sky. */
 .space {
   position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
@@ -59,25 +59,6 @@ a { color: inherit; text-decoration: none; }
   .stars { animation: fly linear both; animation-timeline: scroll(root); }
   @keyframes fly { to { transform: translateY(calc(-1 * var(--travel))); } }
 }
-.nebula span {
-  position: absolute; width: 75vmax; height: 75vmax; border-radius: 50%;
-  background: radial-gradient(closest-side, currentColor, transparent); opacity: .3;
-  transition: color 1.8s ease, translate 2.2s var(--ease-in-out), scale 2.2s var(--ease-in-out);
-}
-:root:not([data-theme="dark"]) .nebula span { opacity: .2; }
-.nebula span:nth-child(1) { left: -25vmax; top: -30vmax; color: var(--c2); }
-.nebula span:nth-child(2) { right: -30vmax; bottom: -35vmax; color: var(--c1); }
-/* each section brings its own nebula colors closer (body[data-section] set in script.js) */
-[data-section="about"] .nebula span:nth-child(1) { color: var(--c1); translate: 20vw 15vh; }
-[data-section="about"] .nebula span:nth-child(2) { color: var(--c4); translate: -10vw -20vh; }
-[data-section="skills"] .nebula span:nth-child(1) { color: var(--c3); translate: 45vw 30vh; scale: 1.15; }
-[data-section="skills"] .nebula span:nth-child(2) { color: var(--c2); translate: -35vw -10vh; }
-[data-section="projects"] .nebula span:nth-child(1) { color: var(--c2); translate: 10vw 45vh; scale: 1.2; }
-[data-section="projects"] .nebula span:nth-child(2) { color: var(--c3); translate: -45vw -35vh; }
-[data-section="experience"] .nebula span:nth-child(1) { color: var(--c3); translate: 55vw 5vh; }
-[data-section="experience"] .nebula span:nth-child(2) { color: var(--c1); translate: -20vw -45vh; scale: 1.15; }
-[data-section="contact"] .nebula span:nth-child(1) { color: var(--c1); translate: 30vw 40vh; scale: 1.25; }
-[data-section="contact"] .nebula span:nth-child(2) { color: var(--c2); translate: -30vw -25vh; scale: 1.2; }
 /* an occasional shooting star (dark mode only) */
 .shooting {
   position: absolute; top: 14%; left: 8%; width: 140px; height: 2px; border-radius: 2px; opacity: 0;
@@ -510,12 +491,12 @@ section[id] { scroll-margin-top: 70px; }
 main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s var(--ease-out); }
 .warping main, .warping .nav, .warping footer { opacity: 0; transform: scale(.96); transition-duration: .35s; }
 .warp-in main, .warp-in .nav, .warp-in footer { opacity: 0; transform: scale(1.03); transition: none; }
-.warp-flash {
-  position: fixed; inset: 0; z-index: 200; pointer-events: none; opacity: 0;
-  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, #fff 85%, var(--c2)), transparent 70%);
-  transition: opacity .25s ease-in .3s;
+/* the browser crossfades the two pages (cross-document view transition), so there's no blank frame between
+   the stretched stars of the old page and the stretched stars of the new one */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
 }
-.warping .warp-flash { opacity: .9; }
 
 /* skills orbit: tech logos start stacked in the middle, then fly out into two rings that turn slowly
    (rings built in script.js; --r animates thanks to @property) */

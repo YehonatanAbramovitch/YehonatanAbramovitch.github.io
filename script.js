@@ -334,20 +334,19 @@ if (navLinks.length) {
     }
     return `url(${c.toDataURL()})`;
   };
-  [[120, 0.55, 11], [55, 0.95, 23], [18, 1.6, 37]].forEach(([n, size, seed], i) => {
-    root.style.setProperty(`--stars${i + 1}-d`, draw(n, size, seed, true));
-    root.style.setProperty(`--stars${i + 1}-l`, draw(n, size * 1.3, seed, false));
-  });
+  // the tiles are cached for the visit so moving between pages doesn't redraw six canvases on load
+  let cache = null;
+  try { cache = JSON.parse(sessionStorage.getItem("star-tiles") || "null"); } catch {}
+  if (!cache) {
+    cache = {};
+    [[120, 0.55, 11], [55, 0.95, 23], [18, 1.6, 37]].forEach(([n, size, seed], i) => {
+      cache[`--stars${i + 1}-d`] = draw(n, size, seed, true);
+      cache[`--stars${i + 1}-l`] = draw(n, size * 1.3, seed, false);
+    });
+    try { sessionStorage.setItem("star-tiles", JSON.stringify(cache)); } catch {}
+  }
+  Object.entries(cache).forEach(([k, v]) => root.style.setProperty(k, v));
 })();
-
-// ---------- background: the nebulas recolor for each section ----------
-const sections = document.querySelectorAll("main > section");
-if (sections.length) {
-  const bg = new IntersectionObserver((entries) => entries.forEach((e) => {
-    if (e.isIntersecting) document.body.dataset.section = e.target.id || "hero";
-  }), { rootMargin: "-50% 0px -50% 0px" });
-  sections.forEach((s) => bg.observe(s));
-}
 
 const finePointer = matchMedia("(hover: hover) and (pointer: fine)").matches;
 if (finePointer && !reduceMotion) {
@@ -416,7 +415,7 @@ document.addEventListener("click", (e) => {
   e.preventDefault();
   try { sessionStorage.setItem("warp", "1"); } catch {}
   root.classList.add("warping");
-  setTimeout(() => { location.href = url.href; }, 560);
+  setTimeout(() => { location.href = url.href; }, 420);
 });
 // arrival: let the first frame paint stretched, then drop out of hyperspace
 if (root.classList.contains("warp-in")) requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("warp-in")));
@@ -460,11 +459,10 @@ function cvGame(btn) {
     setTimeout(() => {
       game.querySelector(".net").animate([{ transform: "scaleY(1)" }, { transform: "scaleY(1.35)" }, { transform: "scaleY(1)" }], { duration: 380, easing: "ease-out" });
       game.querySelector(".swish").animate([{ opacity: 0, translate: "-50% 8px" }, { opacity: 1, translate: "-50% 0" }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], { duration: 900, easing: "ease-out" });
-      // swish: start the download
-      const dl = document.createElement("a");
-      dl.href = btn.href; dl.download = "Yehonatan-Abramovitch-CV.pdf";
-      document.body.append(dl); dl.click(); dl.remove();
-    }, 820);
+      // swish: open the CV in a new tab (still within the click's user-activation window, so it isn't blocked)
+      const tab = window.open(btn.href, "_blank");
+      if (tab) tab.opener = null;
+    }, 760);
     setTimeout(() => {
       hoop.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: "both" }).finished.then(() => game.classList.remove("on"));
     }, 1700);
