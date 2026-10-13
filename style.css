@@ -159,17 +159,18 @@ section { padding: 90px 0; }
 .hello { color: var(--c1); font-weight: 600; font-size: clamp(1.2rem, 3vw, 1.6rem); margin-bottom: 4px; }
 .hero h1 { font-size: clamp(2.8rem, 9vw, 5.5rem); line-height: 1.05; letter-spacing: -2px; }
 .role { font-size: clamp(1.4rem, 4vw, 2.2rem); font-weight: 500; margin-top: 6px; }
-/* the role line is written in once: a colored bar sweeps left to right and the text appears behind it */
-.role-wipe { position: relative; display: inline-block; }
+/* the role line, then the tagline, are written in once: a colored bar sweeps left to right and the text
+   appears behind it (--d staggers the second line) */
+.role-wipe { position: relative; display: inline-block; --d: .55s; }
+.role-wipe > span { display: inline-block; animation: wipe 1.1s var(--ease-in-out) var(--d) both; }
 #role {
   background: linear-gradient(90deg, var(--c2), var(--c3));
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: wipe 1.1s var(--ease-in-out) .55s both;
 }
 .role-wipe::after {
   content: ""; position: absolute; top: 8%; bottom: 8%; left: 0; width: 4px; border-radius: 4px;
   background: linear-gradient(var(--c1), var(--c4));
-  animation: sweep 1.1s var(--ease-in-out) .55s both, bar-out .35s ease-out 1.65s both;
+  animation: sweep 1.1s var(--ease-in-out) var(--d) both, bar-out .35s ease-out calc(var(--d) + 1.1s) both;
 }
 @keyframes wipe { from { clip-path: inset(-10% 100% -10% 0); } to { clip-path: inset(-10% 0 -10% 0); } }
 @keyframes sweep { from { left: 0; } to { left: calc(100% + 6px); } }
