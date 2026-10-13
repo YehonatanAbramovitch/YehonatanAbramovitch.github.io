@@ -95,23 +95,17 @@ function renderHome() {
       </div>`).join("")}
     </div>`;
   $("orbit").innerHTML = `<div class="orbit-core">&lt;/&gt;</div>${ring(inner, "r1", 24, 60, 0)}${ring(outer, "r2", 43, 90, inner.length)}`;
-  // the logos burst out of the stack once the orbit is well on screen and gather back when it leaves,
-  // so the launch plays every time you scroll to it; the rings stop turning while it's off screen
-  new IntersectionObserver(([e]) => {
-    if (e.intersectionRatio >= 0.45) $("orbit").classList.add("launched");
-    else if (e.intersectionRatio === 0) $("orbit").classList.remove("launched");
-    $("orbit").classList.toggle("paused", !e.isIntersecting);
-  }, { threshold: [0, 0.45] }).observe($("orbit"));
 
   cvGame($("cvBtn"));
 
   $("skillGrid").innerHTML = Object.entries(SITE.skills).map(([group, items], i) => `
     <div class="skill-group" style="--accent:${accents[i % 4]}; --i:${i}">
-      <h4>${esc(group)} <span class="mono">${items.length}</span></h4>
+      <h4>${esc(group)}</h4>
       <ul class="skill-list">${items.map((s) => `
-        <li class="skill"><span class="skill-icon" style="--glyph:url('${skillIcon(s)}')" aria-hidden="true"></span>${esc(s)}</li>`).join("")}
+        <li class="skill" data-skill="${esc(s)}"><span class="skill-icon" style="--glyph:url('${skillIcon(s)}')" aria-hidden="true"></span>${esc(s)}</li>`).join("")}
       </ul>
     </div>`).join("");
+  skillsIntro();
 
   $("projectGrid").innerHTML = SITE.projects.map((p, i) => `
     <article class="card" style="--accent:${accents[i % 4]}; --i:${i}">
@@ -160,6 +154,43 @@ function renderHome() {
   $("role").textContent = SITE.role; // revealed by the CSS wipe (.role-wipe)
 }
 
+
+// skills intro: orbit first, then the logos fly into the group cards (once per visit to the page)
+function skillsIntro() {
+  const stage = $("skillsStage"), orbit = $("orbit");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { stage.classList.add("dispersed", "done"); return; }
+  const io = new IntersectionObserver(([e]) => {
+    if (e.intersectionRatio < 0.45) return;
+    io.disconnect();
+    orbit.classList.add("launched");
+    setTimeout(disperse, 3200); // burst (~1.5s) plus a moment of orbiting
+  }, { threshold: 0.45 });
+  io.observe(orbit);
+
+  function disperse() {
+    const targets = new Map([...document.querySelectorAll("#skillGrid .skill")].map((li) => [li.dataset.skill, li.querySelector(".skill-icon")]));
+    orbit.querySelectorAll(".orb-tile").forEach((tile, i) => {
+      const icon = tile.querySelector(".skill-icon"), dest = targets.get(tile.dataset.name);
+      if (!dest) return;
+      const a = icon.getBoundingClientRect(), b = dest.getBoundingClientRect();
+      if (!a.width || !b.width) return;
+      // a copy of the logo travels in page coordinates, so scrolling mid-flight doesn't throw it off
+      const fly = document.createElement("span");
+      fly.className = "skill-icon fly";
+      fly.style.cssText = `--glyph:${icon.style.getPropertyValue("--glyph")}; background:${getComputedStyle(icon).backgroundColor};
+        left:${a.left + scrollX}px; top:${a.top + scrollY}px; width:${a.width}px; height:${a.height}px`;
+      document.body.append(fly);
+      dest.style.visibility = "hidden";
+      fly.animate([
+        { transform: "none" },
+        { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${b.width / a.width})` },
+      ], { duration: 950, delay: i * 45, easing: "cubic-bezier(0.65, 0, 0.35, 1)", fill: "both" })
+        .finished.then(() => { dest.style.visibility = ""; fly.remove(); });
+    });
+    stage.classList.add("dispersed");
+    setTimeout(() => stage.classList.add("done"), 1800);
+  }
+}
 
 // ---------- project detail page ----------
 function renderProject() {

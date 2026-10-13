@@ -498,11 +498,20 @@ main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s va
   ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
 }
 
-/* skills orbit: tech logos start stacked in the middle, then fly out into two rings that turn slowly
-   (rings built in script.js; --r animates thanks to @property) */
+/* skills: when you scroll there, the tech logos burst out of a stack into an orbit; a few seconds later each logo
+   flies to its tile in the group cards and the cards take over (sequence in script.js). The orbit sits on top of the
+   grid, whose cards wait invisible underneath so nothing below jumps when the orbit goes away. */
+.skills-stage { position: relative; }
+.skills-stage:not(.dispersed) .skill-group { opacity: 0; translate: 0 24px; }
+.skill-group { transition: opacity .7s var(--ease-out), translate .7s var(--ease-out); transition-delay: calc(var(--i) * 90ms + 200ms); }
+.skills-stage.dispersed .orbit { opacity: 0; scale: .85; pointer-events: none; }
+.skills-stage.done .orbit { display: none; }
+.skill-icon.fly { position: absolute; z-index: 60; margin: 0; transform-origin: 0 0; pointer-events: none; }
+/* rings built in script.js; --r animates thanks to @property */
 @property --r { syntax: "<length>"; inherits: false; initial-value: 0px; }
 .orbit {
-  position: relative; width: min(100%, 640px); aspect-ratio: 1; margin: 0 auto 64px; container-type: size;
+  position: absolute; left: 50%; top: 0; translate: -50% 0; z-index: 1; width: min(100%, 600px); aspect-ratio: 1;
+  container-type: size; transition: opacity .6s var(--ease-out), scale .7s var(--ease-out);
 }
 .orbit .ring { position: absolute; inset: 0; animation: spin var(--dur) linear infinite; }
 .orbit .ring::before {
@@ -538,7 +547,7 @@ main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s va
   background: var(--text); color: var(--bg); opacity: 0; pointer-events: none; transition: opacity .2s, translate .2s var(--ease-out);
 }
 .orb-tile:hover::after { opacity: 1; translate: -50% 0; }
-.orbit:hover .ring, .orbit:hover .orb-tile, .orbit.paused .ring, .orbit.paused .orb-tile { animation-play-state: paused; }
+.orbit:hover .ring, .orbit:hover .orb-tile { animation-play-state: paused; }
 .orbit-core {
   position: absolute; left: 50%; top: 50%; width: 18cqw; height: 18cqw; margin: -9cqw 0 0 -9cqw; border-radius: 50%;
   display: grid; place-items: center; color: #fff; font: 600 4.5cqw "JetBrains Mono", monospace;
@@ -627,6 +636,6 @@ main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s va
   .progress { display: none; }
   .role-wipe::after { display: none; }
   .shooting { display: none; }
-  .orbit .ring::before { opacity: 1; }
-  .orb { --r: var(--R); opacity: 1; scale: 1; }
+  .skills-stage .orbit { display: none; }
+  .skills-stage .skill-group { opacity: 1; translate: none; }
 }
