@@ -94,9 +94,14 @@ function renderHome() {
         <span class="orb-tile" data-name="${esc(s)}"><span class="skill-icon" style="--glyph:url('${skillIcon(s)}')"></span></span>
       </div>`).join("")}
     </div>`;
-  $("orbit").innerHTML = `<div class="orbit-core">&lt;/&gt;</div>${ring(inner, "r1", 23, 60, 0)}${ring(outer, "r2", 41, 90, inner.length)}`;
-  // stop the rings while the orbit is off screen
-  new IntersectionObserver(([e]) => $("orbit").classList.toggle("paused", !e.isIntersecting)).observe($("orbit"));
+  $("orbit").innerHTML = `<div class="orbit-core">&lt;/&gt;</div>${ring(inner, "r1", 24, 60, 0)}${ring(outer, "r2", 43, 90, inner.length)}`;
+  // the logos burst out of the stack once the orbit is well on screen and gather back when it leaves,
+  // so the launch plays every time you scroll to it; the rings stop turning while it's off screen
+  new IntersectionObserver(([e]) => {
+    if (e.intersectionRatio >= 0.45) $("orbit").classList.add("launched");
+    else if (e.intersectionRatio === 0) $("orbit").classList.remove("launched");
+    $("orbit").classList.toggle("paused", !e.isIntersecting);
+  }, { threshold: [0, 0.45] }).observe($("orbit"));
 
   cvGame($("cvBtn"));
 

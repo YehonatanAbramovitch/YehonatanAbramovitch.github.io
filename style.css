@@ -521,7 +521,7 @@ main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s va
    (rings built in script.js; --r animates thanks to @property) */
 @property --r { syntax: "<length>"; inherits: false; initial-value: 0px; }
 .orbit {
-  position: relative; width: min(100%, 520px); aspect-ratio: 1; margin: 0 auto 48px; container-type: size;
+  position: relative; width: min(100%, 640px); aspect-ratio: 1; margin: 0 auto 64px; container-type: size;
 }
 .orbit .ring { position: absolute; inset: 0; animation: spin var(--dur) linear infinite; }
 .orbit .ring::before {
@@ -529,15 +529,20 @@ main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s va
   border: 1.5px dashed color-mix(in srgb, var(--c2) 30%, transparent);
   opacity: 0; transition: opacity .8s ease .6s;
 }
-.reveal.visible .orbit .ring::before { opacity: 1; }
+.orbit.launched .ring::before { opacity: 1; }
 .orbit .r2 { animation-direction: reverse; }
 .orb {
-  position: absolute; left: 50%; top: 50%; width: 15cqw; height: 15cqw; margin: -7.5cqw 0 0 -7.5cqw;
+  position: absolute; left: 50%; top: 50%; width: 11cqw; height: 11cqw; margin: -5.5cqw 0 0 -5.5cqw;
   --r: 0px; transform: rotate(var(--a)) translateX(var(--r)) rotate(calc(-1 * var(--a)));
-  transition: --r 1.2s var(--ease-out);
-  transition-delay: calc(var(--k) * 70ms + 250ms);
+  opacity: 0; scale: .5;
+  /* flying back into the stack is quick; flying out overshoots a little, like a burst */
+  transition: --r .5s var(--ease-in-out), opacity .3s, scale .5s var(--ease-out);
 }
-.reveal.visible .orb { --r: var(--R); }
+.orbit.launched .orb {
+  --r: var(--R); opacity: 1; scale: 1;
+  transition: --r 1.4s cubic-bezier(0.34, 1.4, 0.64, 1), opacity .4s, scale .9s var(--ease-out);
+  transition-delay: calc(var(--k) * 60ms + 150ms);
+}
 .orb-tile {
   width: 100%; height: 100%; display: grid; place-items: center; border-radius: 28%;
   background: var(--surface); border: 2px solid color-mix(in srgb, var(--accent) 45%, var(--border));
@@ -554,8 +559,8 @@ main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s va
 .orb-tile:hover::after { opacity: 1; translate: -50% 0; }
 .orbit:hover .ring, .orbit:hover .orb-tile, .orbit.paused .ring, .orbit.paused .orb-tile { animation-play-state: paused; }
 .orbit-core {
-  position: absolute; left: 50%; top: 50%; width: 22cqw; height: 22cqw; margin: -11cqw 0 0 -11cqw; border-radius: 50%;
-  display: grid; place-items: center; color: #fff; font: 600 5cqw "JetBrains Mono", monospace;
+  position: absolute; left: 50%; top: 50%; width: 18cqw; height: 18cqw; margin: -9cqw 0 0 -9cqw; border-radius: 50%;
+  display: grid; place-items: center; color: #fff; font: 600 4.5cqw "JetBrains Mono", monospace;
   background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3)); box-shadow: 0 0 0 10px color-mix(in srgb, var(--c2) 12%, transparent);
 }
 @keyframes spin { to { rotate: 360deg; } }
@@ -642,4 +647,5 @@ main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s va
   .role-wipe::after { display: none; }
   .shooting { display: none; }
   .orbit .ring::before { opacity: 1; }
+  .orb { --r: var(--R); opacity: 1; scale: 1; }
 }
