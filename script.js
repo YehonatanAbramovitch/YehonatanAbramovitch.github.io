@@ -152,7 +152,24 @@ function renderProject() {
   const idx = SITE.projects.findIndex((p) => p.id === id);
   const p = SITE.projects[idx];
   if (!p || !p.details) {
-    $("project").innerHTML = `<p class="notfound">Project not found. <a href="index.html#projects">Back to projects →</a></p>`;
+    // the next project with a case study (wrapping around), shown as a large card at the end of the page
+  const withDetails = SITE.projects.filter((q) => q.details);
+  const next = withDetails.length > 1 ? withDetails[(withDetails.indexOf(p) + 1) % withDetails.length] : null;
+  const nextCover = next && (next.video ? next.video.poster : next.images && next.images[0] && next.images[0].src);
+  const nextCard = next ? `
+    <section class="p-section reveal">
+      <a class="next-project" href="project.html?id=${esc(next.id)}" style="--accent:${accents[SITE.projects.indexOf(next) % 4]}">
+        ${nextCover ? `<span class="np-media"><img src="${esc(nextCover)}" alt="" loading="lazy"></span>` : ""}
+        <span class="np-text">
+          <span class="np-label mono">Next project</span>
+          <span class="np-title">${esc(next.title)}</span>
+          ${chips(next.tags.slice(0, 4))}
+        </span>
+        <span class="np-arrow" aria-hidden="true">→</span>
+      </a>
+    </section>` : "";
+
+  $("project").innerHTML = `<p class="notfound">Project not found. <a href="index.html#projects">Back to projects →</a></p>`;
     return;
   }
   const d = p.details;
@@ -190,6 +207,23 @@ function renderProject() {
     ${p.github ? `<a class="btn primary" href="${esc(p.github)}" target="_blank" rel="noopener">${icons.github} View code on GitHub</a>` : ""}
     ${p.demo ? `<a class="btn" href="${esc(p.demo)}" target="_blank" rel="noopener">Live demo ↗</a>` : ""}`;
 
+  // the next project with a case study (wrapping around), shown as a large card at the end of the page
+  const withDetails = SITE.projects.filter((q) => q.details);
+  const next = withDetails.length > 1 ? withDetails[(withDetails.indexOf(p) + 1) % withDetails.length] : null;
+  const nextCover = next && (next.video ? next.video.poster : next.images && next.images[0] && next.images[0].src);
+  const nextCard = next ? `
+    <section class="p-section reveal">
+      <a class="next-project" href="project.html?id=${esc(next.id)}" style="--accent:${accents[SITE.projects.indexOf(next) % 4]}">
+        ${nextCover ? `<span class="np-media"><img src="${esc(nextCover)}" alt="" loading="lazy"></span>` : ""}
+        <span class="np-text">
+          <span class="np-label mono">Next project</span>
+          <span class="np-title">${esc(next.title)}</span>
+          ${chips(next.tags.slice(0, 4))}
+        </span>
+        <span class="np-arrow" aria-hidden="true">→</span>
+      </a>
+    </section>` : "";
+
   $("project").innerHTML = `
     <a class="back" href="index.html#projects">← All projects</a>
     <header class="p-hero">
@@ -211,7 +245,8 @@ function renderProject() {
       <h3>Want to see how it works?</h3>
       <div class="cta">${links}</div>
       <a class="back" href="index.html#projects">← Back to all projects</a>
-    </section>`;
+    </section>
+    ${nextCard}`;
 
   document.querySelectorAll(".shot").forEach((b) => b.onclick = () => openLightbox(p.images, +b.dataset.i));
 }
@@ -395,7 +430,7 @@ document.addEventListener("click", (e) => {
   const a = e.target.closest("a[href]");
   if (!a || a.target === "_blank" || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   const url = new URL(a.href, location.href);
-  if (url.origin !== location.origin || url.pathname === location.pathname || reduceMotion) return; // same page: plain anchor scroll
+  if (url.origin !== location.origin || (url.pathname === location.pathname && url.search === location.search) || reduceMotion) return; // same page: plain anchor scroll
   try { sessionStorage.setItem("warp", "1"); } catch {}
   // browsers with cross-document view transitions animate the change themselves (see style.css): just navigate
   if ("onpagereveal" in window) return;
@@ -406,6 +441,8 @@ document.addEventListener("click", (e) => {
 });
 // arrival: let the first frame paint stretched, then drop out of hyperspace
 if (root.classList.contains("warp-in")) requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("warp-in")));
+// the browser skips a page transition when it can't run it (e.g. the window resized); that's expected, not an error
+for (const ev of ["pageswap", "pagereveal"]) addEventListener(ev, (e) => { const t = e.viewTransition; if (t) { t.ready.catch(() => {}); t.finished.catch(() => {}); } });
 // coming back with the browser's back button can restore the page mid-jump
 addEventListener("pageshow", () => root.classList.remove("warping", "warp-in"));
 
