@@ -16,10 +16,29 @@ function socialsHTML() {
   links.push(`<a href="mailto:${esc(SITE.email)}" aria-label="email">${icons.email}</a>`);
   return links.join("");
 }
+// skill icons: tech logos from Devicon, concept icons from Tabler (both MIT); drawn as a mask in the group's color.
+// A skill that isn't listed here gets a generic code icon, so new skills in data.js still render.
+const DEVICON = "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/";
+const TABLER = "https://cdn.jsdelivr.net/npm/@tabler/icons@3.24.0/icons/outline/";
+const skillIcons = {
+  "Python": "python/python-plain", "C++": "cplusplus/cplusplus-plain", "C": "c/c-plain", "Java": "java/java-plain",
+  "JavaScript": "javascript/javascript-plain", "React": "react/react-original", "Node.js/Express": "nodejs/nodejs-plain",
+  "MongoDB": "mongodb/mongodb-plain", "Git": "git/git-plain", "Docker": "docker/docker-plain", "CMake": "cmake/cmake-plain",
+  "Linux": "linux/linux-plain", "Grafana": "grafana/grafana-plain",
+  "REST APIs": "t:api", "JWT": "t:key", "OOP": "t:box-model-2", "Data Structures & Algorithms": "t:binary-tree",
+  "GoogleTest": "t:test-pipe", "Unit testing": "t:checklist", "Machine Learning": "t:brain",
+  "Neural networks": "t:topology-star-3", "Claude Code": "t:sparkles", "AI-assisted dev": "t:robot",
+  "TCP/IP": "t:network", "Zabbix": "t:activity-heartbeat", "Incident triage": "t:alert-triangle",
+  "Production troubleshooting": "t:bug",
+};
+const skillIcon = (name) => {
+  const k = skillIcons[name] || "t:code";
+  return k.startsWith("t:") ? `${TABLER}${k.slice(2)}.svg` : `${DEVICON}${k}.svg`;
+};
 const chips = (items) => `<div class="chips">${items.map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</div>`;
 // muted looping demo clip; started from JS (see startDemoVideos) since mobile browsers often ignore autoplay
-const demoVideo = (v, title, onPage = false) => `
-  <video src="${esc(onPage ? v.src : v.card || v.src)}" poster="${esc(v.poster)}" muted loop playsinline autoplay preload="auto"
+const demoVideo = (v, title, onPage = false, attrs = "") => `
+  <video ${attrs} src="${esc(onPage ? v.src : v.card || v.src)}" poster="${esc(v.poster)}" muted loop playsinline autoplay preload="auto"
     ${onPage ? "controls" : ""} ${!onPage && v.fit === "contain" ? `class="fit-contain" style="background:${esc(v.bg || "#000")}"` : ""}
     aria-label="${esc(title)} demo video"></video>`;
 
@@ -40,7 +59,7 @@ function startDemoVideos() {
     io.observe(v);
     // hide the tap mark as soon as frames actually play (more reliable on iOS than the play() promise)
     v.addEventListener("playing", () => v.parentElement.classList.remove("needs-tap"));
-    // tapping a paused card clip starts it (the project-page player has its own controls)
+    // tapping a card clip opens the screenshots (see renderHome); also start it if autoplay was blocked
     if (!v.controls) v.addEventListener("click", () => { if (v.paused) tryPlay(v); });
   });
 }
@@ -64,20 +83,25 @@ function renderHome() {
   $("mailBtn").textContent = SITE.email;
   $("heroSocials").innerHTML = $("footSocials").innerHTML = socialsHTML();
 
-  $("aboutText").innerHTML = SITE.about.map((p) => `<p>${esc(p)}</p>`).join("");
-  $("skills").innerHTML = Object.entries(SITE.skills).map(([group, items], i) => `
-    <div style="--accent:${accents[i % 4]}; --i:${i}"><h4>${esc(group)}</h4>${chips(items)}</div>`).join("");
+  $("aboutText").innerHTML = SITE.about.map((p, i) => `<p style="--i:${i}">${esc(p)}</p>`).join("");
+  $("skillGrid").innerHTML = Object.entries(SITE.skills).map(([group, items], i) => `
+    <div class="skill-group" style="--accent:${accents[i % 4]}; --i:${i}">
+      <h4>${esc(group)} <span class="mono">${items.length}</span></h4>
+      <ul class="skill-list">${items.map((s) => `
+        <li class="skill"><span class="skill-icon" style="--glyph:url('${skillIcon(s)}')" aria-hidden="true"></span>${esc(s)}</li>`).join("")}
+      </ul>
+    </div>`).join("");
 
   $("projectGrid").innerHTML = SITE.projects.map((p, i) => `
     <article class="card" style="--accent:${accents[i % 4]}; --i:${i}">
       ${p.video
-        // with a video, tapping the cover only plays the clip; the screenshots open from the badge
-        ? `<div class="thumb has-video">
-             ${demoVideo(p.video, p.title)}
+        // clicking the clip (or the badge) opens the project's screenshots
+        ? `<div class="thumb has-video" data-cursor="view">
+             ${demoVideo(p.video, p.title, false, p.images && p.images.length ? `data-project="${i}"` : "")}
              ${p.images && p.images.length ? `<button class="count" data-project="${i}" aria-label="View ${esc(p.title)} screenshots">${shotsLabel(p.images)}</button>` : ""}
            </div>`
         : p.images && p.images.length
-        ? `<button class="thumb" data-project="${i}" aria-label="View ${esc(p.title)} screenshots">
+        ? `<button class="thumb" data-project="${i}" data-cursor="view" aria-label="View ${esc(p.title)} screenshots">
              <img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}" loading="lazy">
              <span class="count">${shotsLabel(p.images)}</span>
            </button>`
@@ -106,11 +130,27 @@ function renderHome() {
   document.querySelectorAll("[data-project]").forEach((btn) =>
     btn.onclick = () => openLightbox(SITE.projects[btn.dataset.project].images, 0));
 
-  // typing effect for the role
-  (function type(i = 0) {
-    $("role").textContent = SITE.role.slice(0, i);
-    if (i < SITE.role.length) setTimeout(() => type(i + 1), 70);
-  })();
+  scramble($("role"), SITE.role);
+}
+
+// decode effect: random glyphs settle into the real text, left to right
+function scramble(el, text) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = text; return; }
+  const glyphs = "!<>-_\\/[]{}=+*^?#01";
+  const start = performance.now() + 450; // let the hero entrance land first
+  const perChar = 38, settle = 260;
+  el.setAttribute("aria-label", text);
+  (function frame(now) {
+    const t = now - start;
+    let out = "", done = true;
+    for (let i = 0; i < text.length; i++) {
+      const lockAt = i * perChar + settle;
+      if (text[i] === " " || t >= lockAt) out += t < 0 && text[i] !== " " ? "" : text[i];
+      else { done = false; out += t > i * perChar - settle ? glyphs[(Math.random() * glyphs.length) | 0] : ""; }
+    }
+    el.textContent = out;
+    if (!done) requestAnimationFrame(frame);
+  })(performance.now());
 }
 
 // ---------- project detail page ----------
@@ -266,13 +306,62 @@ if (navLinks.length) {
   navLinks.forEach((a) => { const s = document.querySelector(a.getAttribute("href")); if (s) spy.observe(s); });
 }
 
-// ---------- project cards: spotlight follows the pointer ----------
-if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
-  document.querySelectorAll(".card").forEach((card) => card.addEventListener("pointermove", (e) => {
-    const r = card.getBoundingClientRect();
-    card.style.setProperty("--mx", `${e.clientX - r.left}px`);
-    card.style.setProperty("--my", `${e.clientY - r.top}px`);
-  }));
+// ---------- background: the color blobs drift and recolor for each section ----------
+const sections = document.querySelectorAll("main > section");
+if (sections.length) {
+  const bg = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (e.isIntersecting) document.body.dataset.section = e.target.id || "hero";
+  }), { rootMargin: "-50% 0px -50% 0px" });
+  sections.forEach((s) => bg.observe(s));
+}
+
+const finePointer = matchMedia("(hover: hover) and (pointer: fine)").matches;
+if (finePointer && !reduceMotion) {
+  // ---------- project cards: tilt toward the pointer + spotlight ----------
+  document.querySelectorAll(".card").forEach((card) => {
+    card.addEventListener("pointermove", (e) => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      card.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      card.style.setProperty("--my", `${e.clientY - r.top}px`);
+      card.style.setProperty("--ry", `${(px - 0.5) * 8}deg`);
+      card.style.setProperty("--rx", `${(0.5 - py) * 6}deg`);
+    });
+    card.addEventListener("pointerleave", () => { card.style.setProperty("--rx", "0deg"); card.style.setProperty("--ry", "0deg"); });
+  });
+
+  // ---------- magnetic buttons: main actions lean toward the pointer ----------
+  document.querySelectorAll(".cta .btn, .btn.big").forEach((btn) => {
+    btn.addEventListener("pointermove", (e) => {
+      const r = btn.getBoundingClientRect();
+      btn.style.translate = `${(e.clientX - r.left - r.width / 2) * 0.25}px ${(e.clientY - r.top - r.height / 2) * 0.35}px`;
+    });
+    btn.addEventListener("pointerleave", () => { btn.style.translate = ""; });
+  });
+
+  // ---------- custom cursor: a dot plus a ring that trails it and grows over clickable things ----------
+  const dot = document.querySelector(".cursor-dot"), ring = document.querySelector(".cursor-ring");
+  if (dot && ring) {
+    let mx = -100, my = -100, rx = -100, ry = -100, raf = 0;
+    const loop = () => {
+      rx += (mx - rx) * 0.2; ry += (my - ry) * 0.2;
+      ring.style.transform = `translate(${rx}px, ${ry}px)`;
+      raf = Math.abs(mx - rx) + Math.abs(my - ry) > 0.1 ? requestAnimationFrame(loop) : 0;
+    };
+    document.addEventListener("pointermove", (e) => {
+      if (e.pointerType !== "mouse") return;
+      root.classList.add("has-cursor"); // only once a real mouse moves, so touch/hybrid devices keep the native cursor
+      mx = e.clientX; my = e.clientY;
+      dot.style.transform = `translate(${mx}px, ${my}px)`;
+      root.classList.add("cursor-on");
+      const t = e.target.closest?.("[data-cursor], a, button, .card");
+      ring.dataset.state = !t ? "" : t.dataset.cursor || (t.matches(".card") ? "card" : "link");
+      if (!raf) raf = requestAnimationFrame(loop);
+    });
+    document.addEventListener("pointerdown", () => ring.classList.add("down"));
+    document.addEventListener("pointerup", () => ring.classList.remove("down"));
+    document.documentElement.addEventListener("pointerleave", () => root.classList.remove("cursor-on"));
+  }
 }
 
 // ---------- reveal sections on scroll ----------
