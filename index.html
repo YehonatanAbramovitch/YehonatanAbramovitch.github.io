@@ -21,9 +21,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=25">
+  <link rel="stylesheet" href="style.css?v=26">
   <!-- apply the saved theme before first paint so dark-mode visitors don't see a light flash -->
-  <script>try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){}</script>
+  <script>try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;if(sessionStorage.getItem("warp")){sessionStorage.removeItem("warp");document.documentElement.classList.add("warp-in")}}catch(e){}</script>
 </head>
 <body data-page="home">
   <div class="space" aria-hidden="true">
@@ -33,7 +33,7 @@
   </div>
   <div class="progress" aria-hidden="true"></div>
   <div class="cursor-label" aria-hidden="true">View</div>
-  <div class="glitch" aria-hidden="true"></div>
+  <div class="warp-flash" aria-hidden="true"></div>
 
   <header class="nav">
     <a href="#top" class="logo" id="logo"></a>
@@ -61,8 +61,8 @@
       <h2 class="role"><span class="role-wipe"><span id="role"></span></span></h2>
       <p class="tagline"><span class="role-wipe" style="--d:1.55s"><span id="tagline"></span></span></p>
       <div class="cta">
-        <a class="btn primary" href="#projects">See my work</a>
-        <a class="btn" id="cvBtn" target="_blank" rel="noopener">Download CV</a>
+        <a class="btn chrome" href="#projects"><span>See my work</span></a>
+        <a class="btn chrome" id="cvBtn" target="_blank" rel="noopener"><span>Download CV</span></a>
       </div>
       <div class="socials" id="heroSocials"></div>
     </section>
@@ -74,6 +74,7 @@
 
     <section id="skills" class="reveal">
       <h3 class="section-title"><span class="mono">02.</span> Skills</h3>
+      <div class="orbit" id="orbit" aria-hidden="true"></div>
       <div id="skillGrid" class="skill-grid"></div>
     </section>
 
@@ -108,7 +109,7 @@
   </dialog>
 
   <!-- bump ?v= on each update so browsers fetch fresh files -->
-  <script src="data.js?v=25"></script>
-  <script src="script.js?v=25"></script>
+  <script src="data.js?v=26"></script>
+  <script src="script.js?v=26"></script>
 </body>
 </html>

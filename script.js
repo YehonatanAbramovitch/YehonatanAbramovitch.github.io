@@ -84,6 +84,22 @@ function renderHome() {
   $("heroSocials").innerHTML = $("footSocials").innerHTML = socialsHTML();
 
   $("aboutText").innerHTML = SITE.about.map((p, i) => `<p style="--i:${i}">${esc(p)}</p>`).join("");
+  const groupOf = {};
+  Object.entries(SITE.skills).forEach(([, items], i) => items.forEach((s) => (groupOf[s] = i)));
+  const logos = Object.keys(groupOf).filter((s) => skillIcons[s] && !skillIcons[s].startsWith("t:"));
+  const inner = logos.filter((s) => groupOf[s] === 0), outer = logos.filter((s) => groupOf[s] !== 0);
+  const ring = (list, cls, R, dur, k0) => `
+    <div class="ring ${cls}" style="--dur:${dur}s; --R:${R}cqw">${list.map((s, i) => `
+      <div class="orb" style="--a:${(360 / list.length) * i}deg; --R:${R}cqw; --k:${k0 + i}; --accent:${accents[groupOf[s] % 4]}">
+        <span class="orb-tile" data-name="${esc(s)}"><span class="skill-icon" style="--glyph:url('${skillIcon(s)}')"></span></span>
+      </div>`).join("")}
+    </div>`;
+  $("orbit").innerHTML = `<div class="orbit-core">&lt;/&gt;</div>${ring(inner, "r1", 23, 60, 0)}${ring(outer, "r2", 41, 90, inner.length)}`;
+  // stop the rings while the orbit is off screen
+  new IntersectionObserver(([e]) => $("orbit").classList.toggle("paused", !e.isIntersecting)).observe($("orbit"));
+
+  cvGame($("cvBtn"));
+
   $("skillGrid").innerHTML = Object.entries(SITE.skills).map(([group, items], i) => `
     <div class="skill-group" style="--accent:${accents[i % 4]}; --i:${i}">
       <h4>${esc(group)} <span class="mono">${items.length}</span></h4>
@@ -348,6 +364,7 @@ if (finePointer && !reduceMotion) {
     btn.addEventListener("pointermove", (e) => {
       const r = btn.getBoundingClientRect();
       btn.style.translate = `${(e.clientX - r.left - r.width / 2) * 0.25}px ${(e.clientY - r.top - r.height / 2) * 0.35}px`;
+      btn.style.setProperty("--px", `${((e.clientX - r.left) / r.width) * 100}%`);
     });
     btn.addEventListener("pointerleave", () => { btn.style.translate = ""; });
   });
@@ -385,28 +402,69 @@ if (finePointer && !reduceMotion) {
   document.documentElement.addEventListener("pointerleave", () => label && label.classList.remove("on"));
 }
 
-// ---------- page change: a short glitch on the way out, and again on arrival ----------
-const glitchLayer = document.querySelector(".glitch");
-function glitch(ms) {
-  if (!glitchLayer || reduceMotion) return Promise.resolve();
-  const colors = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)"];
-  glitchLayer.innerHTML = Array.from({ length: 9 }, (_, i) =>
-    `<span style="top:${(Math.random() * 92).toFixed(1)}%; height:${(2 + Math.random() * 9).toFixed(1)}%; background:${colors[i % 4]}; animation-delay:-${(Math.random() * 0.1).toFixed(2)}s"></span>`).join("");
-  root.classList.add("glitching");
-  return new Promise((r) => setTimeout(() => { root.classList.remove("glitching"); r(); }, ms));
-}
+// ---------- page change: a jump to hyperspace between the home page and project pages ----------
 document.addEventListener("click", (e) => {
   const a = e.target.closest("a[href]");
   if (!a || a.target === "_blank" || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   const url = new URL(a.href, location.href);
   if (url.origin !== location.origin || url.pathname === location.pathname || reduceMotion) return; // same page: plain anchor scroll
   e.preventDefault();
-  try { sessionStorage.setItem("glitch-in", "1"); } catch {}
-  glitch(380).then(() => { location.href = url.href; });
+  try { sessionStorage.setItem("warp", "1"); } catch {}
+  root.classList.add("warping");
+  setTimeout(() => { location.href = url.href; }, 560);
 });
-try { if (sessionStorage.getItem("glitch-in")) { sessionStorage.removeItem("glitch-in"); glitch(300); } } catch {}
-// coming back via the browser's back button can restore the page mid-glitch
-addEventListener("pageshow", () => root.classList.remove("glitching"));
+// arrival: let the first frame paint stretched, then drop out of hyperspace
+if (root.classList.contains("warp-in")) requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("warp-in")));
+// coming back with the browser's back button can restore the page mid-jump
+addEventListener("pageshow", () => root.classList.remove("warping", "warp-in"));
+
+// ---------- CV download as a basketball shot ----------
+function cvGame(btn) {
+  if (!btn) return;
+  let game;
+  btn.addEventListener("click", (e) => {
+    if (reduceMotion || e.metaKey || e.ctrlKey || e.shiftKey) return; // plain download / new tab
+    e.preventDefault();
+    if (game && game.classList.contains("on")) return;
+    if (!game) {
+      game = document.createElement("div");
+      game.className = "hoop-game";
+      game.setAttribute("aria-hidden", "true");
+      game.innerHTML = `<div class="hoop"><span class="swish">Swish!</span><div class="board"></div><div class="rim"></div><div class="net"></div></div><span class="cv-ball">CV</span>`;
+      document.body.append(game);
+    }
+    let shots = 0;
+    try { shots = +localStorage.getItem("cv-shots") || 0; localStorage.setItem("cv-shots", ++shots); } catch { shots = 1; }
+    game.querySelector(".board").textContent = `SCORE ${shots}`;
+    const b = btn.getBoundingClientRect();
+    const x0 = b.left + b.width / 2, y0 = b.top + b.height / 2;
+    const hx = Math.min(innerWidth - 80, Math.max(80, b.right + 280)), hy = Math.max(80, b.top - 150);
+    const hoop = game.querySelector(".hoop");
+    hoop.style.left = `${hx}px`; hoop.style.top = `${hy}px`;
+    game.classList.add("on");
+    const rimY = hy + 78, ball = game.querySelector(".cv-ball");
+    const at = (x, y, r) => `translate(${x}px, ${y}px) rotate(${r}deg)`;
+    hoop.animate([{ opacity: 0, transform: "scale(.8)" }, { opacity: 1, transform: "none" }], { duration: 250, easing: "ease-out", fill: "both" });
+    ball.animate([
+      { transform: at(x0, y0, 0), offset: 0 },
+      { transform: at((x0 + hx) / 2, Math.min(y0, hy) - 90, -200), offset: 0.5 },
+      { transform: at(hx, rimY - 14, -340), offset: 0.82 },
+      { transform: at(hx, rimY + 46, -380), opacity: 1, offset: 0.95 },
+      { transform: at(hx, rimY + 70, -390), opacity: 0 },
+    ], { duration: 950, easing: "linear", fill: "both" });
+    setTimeout(() => {
+      game.querySelector(".net").animate([{ transform: "scaleY(1)" }, { transform: "scaleY(1.35)" }, { transform: "scaleY(1)" }], { duration: 380, easing: "ease-out" });
+      game.querySelector(".swish").animate([{ opacity: 0, translate: "-50% 8px" }, { opacity: 1, translate: "-50% 0" }, { opacity: 1, offset: 0.7 }, { opacity: 0 }], { duration: 900, easing: "ease-out" });
+      // swish: start the download
+      const dl = document.createElement("a");
+      dl.href = btn.href; dl.download = "Yehonatan-Abramovitch-CV.pdf";
+      document.body.append(dl); dl.click(); dl.remove();
+    }, 820);
+    setTimeout(() => {
+      hoop.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: "both" }).finished.then(() => game.classList.remove("on"));
+    }, 1700);
+  });
+}
 
 // ---------- performance: pause the hero's looping avatar while it's off screen ----------
 const hero = document.querySelector(".hero");

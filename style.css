@@ -502,19 +502,112 @@ section[id] { scroll-margin-top: 70px; }
 .cursor-label.on { opacity: 1; scale: 1; }
 .thumb.has-video, .thumb.has-video video { cursor: zoom-in; }
 
-/* page change: a short digital glitch (slices built in script.js) */
-.glitch { position: fixed; inset: 0; z-index: 200; pointer-events: none; display: none; }
-.glitching .glitch { display: block; }
-.glitch span {
-  position: absolute; left: -5%; right: -5%; mix-blend-mode: difference;
-  animation: slice .09s steps(2) infinite alternate;
+/* page change: a jump to hyperspace. Leaving, the star layers stretch into streaks while the page fades out;
+   arriving (html.warp-in, set in the <head>), they shrink back to points as the new page fades in. */
+.stars { transition: scale .7s cubic-bezier(0.23, 1, 0.32, 1); }
+.warping .stars { scale: 1 26; transition: scale .5s cubic-bezier(0.7, 0, 0.84, 0); }
+.warp-in .stars { scale: 1 26; transition: none; }
+main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s var(--ease-out); }
+.warping main, .warping .nav, .warping footer { opacity: 0; transform: scale(.96); transition-duration: .35s; }
+.warp-in main, .warp-in .nav, .warp-in footer { opacity: 0; transform: scale(1.03); transition: none; }
+.warp-flash {
+  position: fixed; inset: 0; z-index: 200; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, #fff 85%, var(--c2)), transparent 70%);
+  transition: opacity .25s ease-in .3s;
 }
-@keyframes slice { from { transform: translateX(-3%); } to { transform: translateX(4%); } }
-.glitching main, .glitching .nav { animation: jitter .1s steps(2) infinite; }
-@keyframes jitter {
-  0% { transform: translate(-5px, 1px) skewX(3deg); }
-  50% { transform: translate(6px, -2px) skewX(-4deg); }
-  100% { transform: translate(-2px, 0); }
+.warping .warp-flash { opacity: .9; }
+
+/* skills orbit: tech logos start stacked in the middle, then fly out into two rings that turn slowly
+   (rings built in script.js; --r animates thanks to @property) */
+@property --r { syntax: "<length>"; inherits: false; initial-value: 0px; }
+.orbit {
+  position: relative; width: min(100%, 520px); aspect-ratio: 1; margin: 0 auto 48px; container-type: size;
+}
+.orbit .ring { position: absolute; inset: 0; animation: spin var(--dur) linear infinite; }
+.orbit .ring::before {
+  content: ""; position: absolute; inset: calc(50% - var(--R)); border-radius: 50%;
+  border: 1.5px dashed color-mix(in srgb, var(--c2) 30%, transparent);
+  opacity: 0; transition: opacity .8s ease .6s;
+}
+.reveal.visible .orbit .ring::before { opacity: 1; }
+.orbit .r2 { animation-direction: reverse; }
+.orb {
+  position: absolute; left: 50%; top: 50%; width: 15cqw; height: 15cqw; margin: -7.5cqw 0 0 -7.5cqw;
+  --r: 0px; transform: rotate(var(--a)) translateX(var(--r)) rotate(calc(-1 * var(--a)));
+  transition: --r 1.2s var(--ease-out);
+  transition-delay: calc(var(--k) * 70ms + 250ms);
+}
+.reveal.visible .orb { --r: var(--R); }
+.orb-tile {
+  width: 100%; height: 100%; display: grid; place-items: center; border-radius: 28%;
+  background: var(--surface); border: 2px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: var(--shadow); position: relative;
+  animation: spin var(--dur) linear infinite reverse; /* cancels the ring's turn so logos stay upright */
+}
+.r2 .orb-tile { animation-direction: normal; }
+.orb-tile .skill-icon { width: 46%; height: 46%; }
+.orb-tile::after {
+  content: attr(data-name); position: absolute; top: calc(100% + 8px); left: 50%; translate: -50% 4px;
+  white-space: nowrap; font-size: .8rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+  background: var(--text); color: var(--bg); opacity: 0; pointer-events: none; transition: opacity .2s, translate .2s var(--ease-out);
+}
+.orb-tile:hover::after { opacity: 1; translate: -50% 0; }
+.orbit:hover .ring, .orbit:hover .orb-tile, .orbit.paused .ring, .orbit.paused .orb-tile { animation-play-state: paused; }
+.orbit-core {
+  position: absolute; left: 50%; top: 50%; width: 22cqw; height: 22cqw; margin: -11cqw 0 0 -11cqw; border-radius: 50%;
+  display: grid; place-items: center; color: #fff; font: 600 5cqw "JetBrains Mono", monospace;
+  background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3)); box-shadow: 0 0 0 10px color-mix(in srgb, var(--c2) 12%, transparent);
+}
+@keyframes spin { to { rotate: 360deg; } }
+
+/* hero buttons in brushed chrome; the highlight follows the pointer (--px from script.js) */
+.btn.chrome {
+  position: relative; overflow: hidden; isolation: isolate; color: #1d1a2f;
+  border: 1px solid rgba(255, 255, 255, .7);
+  background: linear-gradient(180deg, #fbfbfd 0%, #dfe1e8 38%, #b5b8c4 52%, #e9eaf0 78%, #c9ccd6 100%);
+  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 4px rgba(60, 60, 90, .25), 0 6px 18px rgba(30, 20, 60, .25);
+}
+.btn.chrome::before {
+  content: ""; position: absolute; inset: -40% auto -40% calc(var(--px, 30%) - 35px); width: 70px; z-index: -1;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .95), transparent); rotate: 18deg;
+  transition: left .35s var(--ease-out);
+}
+.btn.chrome span { position: relative; text-shadow: 0 1px 0 rgba(255, 255, 255, .8); }
+@media (hover: hover) and (pointer: fine) {
+  .btn.chrome:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 #fff, inset 0 -2px 4px rgba(60, 60, 90, .25), 0 10px 26px rgba(30, 20, 60, .32); }
+}
+.btn.chrome:active { transform: scale(.97); box-shadow: inset 0 1px 0 #fff, inset 0 -1px 3px rgba(60, 60, 90, .3), 0 3px 8px rgba(30, 20, 60, .25); }
+
+/* CV download as a basketball shot (built in script.js): the file arcs into a hoop, swish, then it downloads */
+.hoop-game { position: fixed; inset: 0; z-index: 150; pointer-events: none; display: none; }
+.hoop-game.on { display: block; }
+.hoop { position: absolute; width: 120px; translate: -50% 0; }
+.hoop .board {
+  width: 120px; height: 78px; border-radius: 10px; margin: 0 auto; position: relative;
+  background: color-mix(in srgb, var(--surface) 92%, transparent); border: 2px solid var(--border); box-shadow: var(--shadow);
+  display: grid; place-items: center; font: 600 .7rem "JetBrains Mono", monospace; color: var(--muted);
+}
+.hoop .board::before { content: ""; position: absolute; width: 44px; height: 30px; bottom: 8px; border: 2px solid var(--c1); border-radius: 3px; }
+.hoop .rim {
+  position: relative; width: 74px; height: 12px; margin: -6px auto 0; border-radius: 50%;
+  border: 4px solid var(--c1); z-index: 2;
+}
+.hoop .net {
+  width: 60px; height: 46px; margin: -4px auto 0; transform-origin: top;
+  background:
+    repeating-linear-gradient(60deg, transparent 0 7px, color-mix(in srgb, var(--text) 45%, transparent) 7px 8.5px),
+    repeating-linear-gradient(-60deg, transparent 0 7px, color-mix(in srgb, var(--text) 45%, transparent) 7px 8.5px);
+  clip-path: polygon(0 0, 100% 0, 78% 100%, 22% 100%);
+}
+.hoop .swish {
+  position: absolute; left: 50%; top: -34px; translate: -50% 0; font-weight: 700; color: var(--c1); white-space: nowrap;
+  opacity: 0;
+}
+.cv-ball {
+  position: absolute; left: 0; top: 0; width: 34px; height: 42px; margin: -21px 0 0 -17px; border-radius: 5px;
+  background: var(--c1); color: #fff; display: grid; place-items: end center; padding-bottom: 5px;
+  font: 700 .65rem "JetBrains Mono", monospace; box-shadow: 0 4px 10px rgba(0, 0, 0, .25);
+  clip-path: polygon(0 0, 68% 0, 100% 24%, 100% 100%, 0 100%);
 }
 
 @media (max-width: 900px) {
@@ -548,4 +641,5 @@ section[id] { scroll-margin-top: 70px; }
   .progress { display: none; }
   .role-wipe::after { display: none; }
   .shooting { display: none; }
+  .orbit .ring::before { opacity: 1; }
 }
