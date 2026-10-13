@@ -34,69 +34,72 @@ body {
 /* theme switch: script.js animates the new theme in as a growing circle, so skip the default crossfade */
 .theme-switching::view-transition-old(root), .theme-switching::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 
-/* moving between the home page and a project page: the card's video and title morph into the project page's
-   (names set in script.js); everything else crossfades */
-@media (prefers-reduced-motion: no-preference) {
-  @view-transition { navigation: auto; }
-  ::view-transition-group(*) { animation-duration: .45s; animation-timing-function: var(--ease-out); }
-}
 a { color: inherit; text-decoration: none; }
 .mono { font-family: "JetBrains Mono", monospace; }
 
-/* floating color blobs */
-.blobs { position: fixed; inset: 0; z-index: -1; filter: blur(80px); opacity: .45; pointer-events: none; }
-.blobs span {
-  position: absolute; border-radius: 50%; animation: float 18s ease-in-out infinite alternate;
-  /* "translate" moves the blob to its spot for the current section; "transform" stays free for the float loop */
-  transition: translate 1.8s var(--ease-in-out), background-color 1.8s ease, scale 1.8s var(--ease-in-out);
+/* background: a trip through space. Three star layers (tiles drawn in script.js) move at different speeds as you
+   scroll, so near stars pass faster than far ones; two soft nebulas take the current section's colors.
+   Everything moves with transform only, so scrolling stays on the compositor. Light mode is a dawn sky. */
+.space {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+  background: linear-gradient(180deg, #16132a 0%, #100e1e 60%, #0d0b18 100%);
 }
-.blobs span:nth-child(1) { width: 420px; height: 420px; background: var(--c1); top: -120px; left: -100px; }
-.blobs span:nth-child(2) { width: 380px; height: 380px; background: var(--c2); top: 30%; right: -140px; animation-delay: -6s; }
-.blobs span:nth-child(3) { width: 320px; height: 320px; background: var(--c3); bottom: -120px; left: 30%; animation-delay: -12s; }
-@keyframes float { to { transform: translate(60px, 80px) scale(1.15); } }
-/* topographic contour lines over the blobs (paths generated in script.js). They take the current section's color
-   and each hill turns a little as the page scrolls, so the map seems to shift. */
-.topo { position: fixed; inset: 0; z-index: -1; pointer-events: none; color: var(--c2); transition: color 1.8s ease; }
-.topo svg { width: 100%; height: 100%; display: block; }
-.topo path { fill: none; stroke: currentColor; stroke-width: 1.1; vector-effect: non-scaling-stroke; opacity: .2; }
-:root[data-theme="dark"] .topo path { opacity: .16; }
+:root:not([data-theme="dark"]) .space { background: linear-gradient(180deg, #fff5ec 0%, #f7f1ff 55%, #eef9f6 100%); }
+.stars {
+  position: absolute; left: 0; right: 0; top: 0; height: calc(100vh + var(--travel));
+  background-repeat: repeat; background-size: 512px 512px; will-change: transform;
+}
+.s1 { --travel: 30vh; background-image: var(--stars1-d); }
+.s2 { --travel: 90vh; background-image: var(--stars2-d); }
+.s3 { --travel: 200vh; background-image: var(--stars3-d); }
+:root:not([data-theme="dark"]) .s1 { background-image: var(--stars1-l); }
+:root:not([data-theme="dark"]) .s2 { background-image: var(--stars2-l); }
+:root:not([data-theme="dark"]) .s3 { background-image: var(--stars3-l); }
 @supports (animation-timeline: scroll()) {
-  .topo .hill { animation: drift linear both; animation-timeline: scroll(root); }
-  .topo .hill:nth-child(even) { animation-name: drift-back; }
-  @keyframes drift { to { transform: rotate(14deg) scale(1.12); } }
-  @keyframes drift-back { to { transform: rotate(-12deg) scale(.92); } }
+  .stars { animation: fly linear both; animation-timeline: scroll(root); }
+  @keyframes fly { to { transform: translateY(calc(-1 * var(--travel))); } }
 }
-[data-section="about"] .topo { color: var(--c1); }
-[data-section="skills"] .topo { color: var(--c3); }
-[data-section="projects"] .topo { color: var(--c2); }
-[data-section="experience"] .topo { color: var(--c3); }
-[data-section="contact"] .topo { color: var(--c1); }
-:root:not([data-theme="dark"]) [data-section="skills"] .topo,
-:root:not([data-theme="dark"]) [data-section="experience"] .topo { color: color-mix(in srgb, var(--c3) 70%, #000); }
-/* each section gets its own arrangement and mix of the four brand colors (body[data-section] set in script.js) */
-[data-section="about"] .blobs span:nth-child(1) { background: var(--c4); translate: 55vw 10vh; }
-[data-section="about"] .blobs span:nth-child(2) { background: var(--c1); translate: -50vw 25vh; }
-[data-section="about"] .blobs span:nth-child(3) { background: var(--c2); translate: 30vw -10vh; scale: .8; }
-[data-section="skills"] .blobs span:nth-child(1) { background: var(--c3); translate: 20vw 45vh; scale: 1.2; }
-[data-section="skills"] .blobs span:nth-child(2) { background: var(--c4); translate: -15vw -25vh; }
-[data-section="skills"] .blobs span:nth-child(3) { background: var(--c1); translate: -25vw -40vh; }
-[data-section="projects"] .blobs span:nth-child(1) { background: var(--c2); translate: 70vw 50vh; }
-[data-section="projects"] .blobs span:nth-child(2) { background: var(--c3); translate: -60vw -10vh; scale: 1.15; }
-[data-section="projects"] .blobs span:nth-child(3) { background: var(--c4); translate: 10vw -60vh; scale: .75; }
-[data-section="experience"] .blobs span:nth-child(1) { background: var(--c3); translate: 5vw 60vh; }
-[data-section="experience"] .blobs span:nth-child(2) { background: var(--c2); translate: -5vw -20vh; }
-[data-section="experience"] .blobs span:nth-child(3) { background: var(--c1); translate: 35vw -50vh; scale: 1.2; }
-[data-section="contact"] .blobs span:nth-child(1) { background: var(--c1); translate: 40vw 55vh; scale: 1.25; }
-[data-section="contact"] .blobs span:nth-child(2) { background: var(--c3); translate: -40vw 15vh; }
-[data-section="contact"] .blobs span:nth-child(3) { background: var(--c2); translate: -10vw -30vh; }
+.nebula span {
+  position: absolute; width: 75vmax; height: 75vmax; border-radius: 50%;
+  background: radial-gradient(closest-side, currentColor, transparent); opacity: .3;
+  transition: color 1.8s ease, translate 2.2s var(--ease-in-out), scale 2.2s var(--ease-in-out);
+}
+:root:not([data-theme="dark"]) .nebula span { opacity: .2; }
+.nebula span:nth-child(1) { left: -25vmax; top: -30vmax; color: var(--c2); }
+.nebula span:nth-child(2) { right: -30vmax; bottom: -35vmax; color: var(--c1); }
+/* each section brings its own nebula colors closer (body[data-section] set in script.js) */
+[data-section="about"] .nebula span:nth-child(1) { color: var(--c1); translate: 20vw 15vh; }
+[data-section="about"] .nebula span:nth-child(2) { color: var(--c4); translate: -10vw -20vh; }
+[data-section="skills"] .nebula span:nth-child(1) { color: var(--c3); translate: 45vw 30vh; scale: 1.15; }
+[data-section="skills"] .nebula span:nth-child(2) { color: var(--c2); translate: -35vw -10vh; }
+[data-section="projects"] .nebula span:nth-child(1) { color: var(--c2); translate: 10vw 45vh; scale: 1.2; }
+[data-section="projects"] .nebula span:nth-child(2) { color: var(--c3); translate: -45vw -35vh; }
+[data-section="experience"] .nebula span:nth-child(1) { color: var(--c3); translate: 55vw 5vh; }
+[data-section="experience"] .nebula span:nth-child(2) { color: var(--c1); translate: -20vw -45vh; scale: 1.15; }
+[data-section="contact"] .nebula span:nth-child(1) { color: var(--c1); translate: 30vw 40vh; scale: 1.25; }
+[data-section="contact"] .nebula span:nth-child(2) { color: var(--c2); translate: -30vw -25vh; scale: 1.2; }
+/* an occasional shooting star (dark mode only) */
+.shooting {
+  position: absolute; top: 14%; left: 8%; width: 140px; height: 2px; border-radius: 2px; opacity: 0;
+  background: linear-gradient(90deg, transparent, #fff); rotate: 22deg;
+  animation: shoot 11s linear 4s infinite;
+}
+:root:not([data-theme="dark"]) .shooting { display: none; }
+@keyframes shoot {
+  0% { translate: 0 0; opacity: 0; }
+  1% { opacity: 1; }
+  7% { translate: 55vw 22vw; opacity: 0; }
+  100% { translate: 55vw 22vw; opacity: 0; }
+}
+.hero.paused .avatar { animation-play-state: paused; }
 
 /* nav */
 .nav {
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; gap: 24px;
   padding: 16px clamp(16px, 5vw, 64px);
-  backdrop-filter: blur(12px);
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  /* near-opaque instead of a live blur: a backdrop blur over moving layers repaints on every frame */
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
 }
 .logo {
   font-weight: 700; font-size: 1.3rem;
@@ -484,29 +487,35 @@ html { scrollbar-color: color-mix(in srgb, var(--c2) 45%, var(--border)) transpa
 .card .thumb:focus-visible, .shots .shot:focus-visible { outline-offset: -3px; }
 section[id] { scroll-margin-top: 70px; }
 
-/* custom cursor (desktop mouse only; script.js adds .has-cursor). The ring trails the dot and grows over clickable things. */
-.cursor-dot, .cursor-ring { display: none; }
-.has-cursor, .has-cursor * { cursor: none; }
-.has-cursor .lightbox, .has-cursor .lightbox * { cursor: auto; } /* the dialog sits above the custom cursor */
-.has-cursor .lightbox button { cursor: pointer; }
-.has-cursor .cursor-dot, .has-cursor .cursor-ring {
-  display: block; position: fixed; top: 0; left: 0; z-index: 100; pointer-events: none;
-  opacity: 0; transition: opacity .2s;
+/* cursor (mouse only, set up in script.js): tech icons pop out behind the pointer and fade; over a project video
+   a "View" label rides next to it */
+.trail-icon {
+  position: fixed; top: 0; left: 0; z-index: 90; width: 22px; height: 22px; margin: -11px 0 0 -11px;
+  pointer-events: none; opacity: 0;
+  -webkit-mask: var(--glyph) center / contain no-repeat; mask: var(--glyph) center / contain no-repeat;
 }
-.has-cursor.cursor-on .cursor-dot, .has-cursor.cursor-on .cursor-ring { opacity: 1; }
-.cursor-dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--c1); }
-.cursor-ring { width: 36px; height: 36px; margin: -18px 0 0 -18px; }
-.cursor-ring span {
-  position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--c2);
-  display: grid; place-items: center; font: 700 .7rem "Space Grotesk", sans-serif; color: #fff;
-  transition: transform .3s var(--ease-out), background-color .3s, border-color .3s;
+.cursor-label {
+  position: fixed; top: 0; left: 0; z-index: 95; pointer-events: none; margin: 16px 0 0 16px;
+  padding: 6px 14px; border-radius: 999px; background: var(--c2); color: #fff; font-weight: 700; font-size: .8rem;
+  opacity: 0; scale: .6; transition: opacity .18s, scale .25s var(--ease-out);
 }
-.cursor-ring[data-state="link"] span { transform: scale(1.5); background: color-mix(in srgb, var(--c2) 18%, transparent); }
-.cursor-ring[data-state="card"] span { transform: scale(1.9); border-color: color-mix(in srgb, var(--c2) 50%, transparent); }
-.cursor-ring[data-state="view"] span { transform: scale(2.3); background: var(--c2); border-color: var(--c2); }
-.cursor-ring[data-state="view"] span::after { content: "View"; transform: scale(.45); }
-.cursor-ring.down span { transform: scale(.8); }
-.cursor-ring[data-state="view"].down span { transform: scale(2); }
+.cursor-label.on { opacity: 1; scale: 1; }
+.thumb.has-video, .thumb.has-video video { cursor: zoom-in; }
+
+/* page change: a short digital glitch (slices built in script.js) */
+.glitch { position: fixed; inset: 0; z-index: 200; pointer-events: none; display: none; }
+.glitching .glitch { display: block; }
+.glitch span {
+  position: absolute; left: -5%; right: -5%; mix-blend-mode: difference;
+  animation: slice .09s steps(2) infinite alternate;
+}
+@keyframes slice { from { transform: translateX(-3%); } to { transform: translateX(4%); } }
+.glitching main, .glitching .nav { animation: jitter .1s steps(2) infinite; }
+@keyframes jitter {
+  0% { transform: translate(-5px, 1px) skewX(3deg); }
+  50% { transform: translate(6px, -2px) skewX(-4deg); }
+  100% { transform: translate(-2px, 0); }
+}
 
 @media (max-width: 900px) {
   .skill-grid { grid-template-columns: 1fr 1fr; }
@@ -538,4 +547,5 @@ section[id] { scroll-margin-top: 70px; }
   .reveal, .reveal:not(.visible) [style*="--i"] { opacity: 1; transform: none; }
   .progress { display: none; }
   .role-wipe::after { display: none; }
+  .shooting { display: none; }
 }

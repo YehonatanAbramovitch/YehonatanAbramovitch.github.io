@@ -97,7 +97,7 @@ function renderHome() {
       ${p.video
         // clicking the clip (or the badge) opens the project's screenshots
         ? p.images && p.images.length
-          ? `<div class="thumb has-video" style="view-transition-name:cover-${esc(p.id)}" data-cursor="view" data-project="${i}" role="button" tabindex="0" aria-label="View ${esc(p.title)} screenshots">
+          ? `<div class="thumb has-video" data-cursor="view" data-project="${i}" role="button" tabindex="0" aria-label="View ${esc(p.title)} screenshots">
                ${demoVideo(p.video, p.title)}
              </div>`
           : `<div class="thumb has-video">${demoVideo(p.video, p.title)}</div>`
@@ -108,7 +108,7 @@ function renderHome() {
            </button>`
         : `<div class="thumb">${esc(p.title[0])}</div>`}
       <div class="body">
-        <h4 style="view-transition-name:title-${esc(p.id)}">${esc(p.title)}</h4>
+        <h4>${esc(p.title)}</h4>
         ${list(p.bullets)}
         ${chips(p.tags)}
         <div class="actions">
@@ -188,11 +188,11 @@ function renderProject() {
     <a class="back" href="index.html#projects">← All projects</a>
     <header class="p-hero">
       <div class="meta">${d.meta.map((m) => `<span>${esc(m)}</span>`).join("")}</div>
-      <h1 style="view-transition-name:title-${esc(p.id)}">${esc(p.title)}</h1>
+      <h1>${esc(p.title)}</h1>
       ${chips(p.tags)}
       <div class="cta">${links}</div>
       ${p.video
-        ? `<div class="p-cover p-video" style="view-transition-name:cover-${esc(p.id)}">${demoVideo(p.video, p.title, true)}</div>`
+        ? `<div class="p-cover p-video">${demoVideo(p.video, p.title, true)}</div>`
         : p.images.length ? `<button class="p-cover shot" data-i="0" aria-label="Enlarge screenshot"><img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}"></button>` : ""}
     </header>
     ${section("01.", "The problem", `<p class="lead">${esc(d.problem)}</p>`)}
@@ -296,36 +296,30 @@ if (navLinks.length) {
   navLinks.forEach((a) => { const s = document.querySelector(a.getAttribute("href")); if (s) spy.observe(s); });
 }
 
-// ---------- background: topographic contour lines (generated once; CSS turns them on scroll and recolors per section) ----------
-(function topo() {
-  const W = 1600, H = 1000;
-  let seed = 7;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647; // fixed seed: same map on every visit
-  const hills = [[260, 220, 14], [1300, 300, 12], [820, 820, 15], [1450, 900, 9], [120, 880, 8]];
-  let groups = "";
-  hills.forEach(([cx, cy, rings], h) => {
-    // a few low-frequency waves per hill make each ring wobble like real terrain
-    const waves = [2, 3, 5].map((k) => [k, rnd() * Math.PI * 2, 0.06 + rnd() * 0.08]);
-    let paths = "";
-    for (let r = 1; r <= rings; r++) {
-      const base = r * 34, pts = [];
-      for (let a = 0; a < 64; a++) {
-        const t = (a / 64) * Math.PI * 2;
-        const wob = waves.reduce((s, [k, ph, amp]) => s + amp * Math.sin(k * t + ph + r * 0.35), 1);
-        pts.push(`${(cx + Math.cos(t) * base * wob).toFixed(1)},${(cy + Math.sin(t) * base * wob * 0.8).toFixed(1)}`);
-      }
-      paths += `<path d="M${pts.join("L")}Z"/>`;
+// ---------- background: star tiles for the three space layers (drawn once, used as CSS background images) ----------
+(function stars() {
+  const tile = 512;
+  const draw = (count, size, seed, dark) => {
+    const c = document.createElement("canvas");
+    c.width = c.height = tile;
+    const x = c.getContext("2d");
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647; // fixed seed: same sky every visit
+    const tints = dark ? ["255,255,255", "255,255,255", "255,214,236", "205,195,255", "190,250,240"]
+                       : ["123,92,255", "255,93,143", "24,170,150", "110,100,160"];
+    for (let i = 0; i < count; i++) {
+      const r = size * (0.5 + rnd());
+      x.fillStyle = `rgba(${tints[(rnd() * tints.length) | 0]},${dark ? 0.45 + rnd() * 0.55 : 0.2 + rnd() * 0.3})`;
+      x.beginPath(); x.arc(rnd() * tile, rnd() * tile, r, 0, Math.PI * 2); x.fill();
     }
-    groups += `<g class="hill" style="--h:${h}; transform-origin:${cx}px ${cy}px">${paths}</g>`;
+    return `url(${c.toDataURL()})`;
+  };
+  [[120, 0.55, 11], [55, 0.95, 23], [18, 1.6, 37]].forEach(([n, size, seed], i) => {
+    root.style.setProperty(`--stars${i + 1}-d`, draw(n, size, seed, true));
+    root.style.setProperty(`--stars${i + 1}-l`, draw(n, size * 1.3, seed, false));
   });
-  const layer = document.createElement("div");
-  layer.className = "topo";
-  layer.setAttribute("aria-hidden", "true");
-  layer.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${groups}</svg>`;
-  document.body.prepend(layer);
 })();
 
-// ---------- background: the color blobs drift and recolor for each section ----------
+// ---------- background: the nebulas recolor for each section ----------
 const sections = document.querySelectorAll("main > section");
 if (sections.length) {
   const bg = new IntersectionObserver((entries) => entries.forEach((e) => {
@@ -358,30 +352,65 @@ if (finePointer && !reduceMotion) {
     btn.addEventListener("pointerleave", () => { btn.style.translate = ""; });
   });
 
-  // ---------- custom cursor: a dot plus a ring that trails it and grows over clickable things ----------
-  const dot = document.querySelector(".cursor-dot"), ring = document.querySelector(".cursor-ring");
-  if (dot && ring) {
-    let mx = -100, my = -100, rx = -100, ry = -100, raf = 0;
-    const loop = () => {
-      rx += (mx - rx) * 0.2; ry += (my - ry) * 0.2;
-      ring.style.transform = `translate(${rx}px, ${ry}px)`;
-      raf = Math.abs(mx - rx) + Math.abs(my - ry) > 0.1 ? requestAnimationFrame(loop) : 0;
-    };
-    document.addEventListener("pointermove", (e) => {
-      if (e.pointerType !== "mouse") return;
-      root.classList.add("has-cursor"); // only once a real mouse moves, so touch/hybrid devices keep the native cursor
-      mx = e.clientX; my = e.clientY;
-      dot.style.transform = `translate(${mx}px, ${my}px)`;
-      root.classList.add("cursor-on");
-      const t = e.target.closest?.("[data-cursor], a, button, .card");
-      ring.dataset.state = !t ? "" : t.dataset.cursor || (t.matches(".card") ? "card" : "link");
-      if (!raf) raf = requestAnimationFrame(loop);
-    });
-    document.addEventListener("pointerdown", () => ring.classList.add("down"));
-    document.addEventListener("pointerup", () => ring.classList.remove("down"));
-    document.documentElement.addEventListener("pointerleave", () => root.classList.remove("cursor-on"));
-  }
+  // ---------- cursor: a trail of tech icons, plus a "View" label over project videos ----------
+  const label = document.querySelector(".cursor-label");
+  const trailIcons = Object.values(skillIcons).filter((k) => !k.startsWith("t:")).map((k) => `${DEVICON}${k}.svg`);
+  const pool = Array.from({ length: 14 }, () => {
+    const s = document.createElement("span");
+    s.className = "trail-icon";
+    document.body.append(s);
+    return s;
+  });
+  let last = null, n = 0;
+  document.addEventListener("pointermove", (e) => {
+    if (e.pointerType !== "mouse") return;
+    const view = e.target.closest?.("[data-cursor='view']");
+    if (label) { label.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`; label.classList.toggle("on", !!view); }
+    if (view || lb.open) { last = null; return; } // keep the trail out of the way of the video and the gallery
+    if (!last) { last = [e.clientX, e.clientY]; return; }
+    if (Math.hypot(e.clientX - last[0], e.clientY - last[1]) < 70) return;
+    last = [e.clientX, e.clientY];
+    const el = pool[n % pool.length], x = e.clientX, y = e.clientY;
+    el.style.setProperty("--glyph", `url('${trailIcons[n % trailIcons.length]}')`);
+    el.style.background = accents[n % 4];
+    n++;
+    el.getAnimations().forEach((a) => a.cancel());
+    const dx = (Math.random() - 0.5) * 36, dy = 16 + Math.random() * 18, rot = (Math.random() - 0.5) * 50;
+    el.animate([
+      { transform: `translate(${x}px, ${y}px) scale(.4)`, opacity: 0 },
+      { transform: `translate(${x}px, ${y}px) scale(1) rotate(${rot / 2}deg)`, opacity: 0.9, offset: 0.2 },
+      { transform: `translate(${x + dx}px, ${y + dy}px) scale(.6) rotate(${rot}deg)`, opacity: 0 },
+    ], { duration: 900, easing: "cubic-bezier(0.23, 1, 0.32, 1)", fill: "forwards" });
+  });
+  document.documentElement.addEventListener("pointerleave", () => label && label.classList.remove("on"));
 }
+
+// ---------- page change: a short glitch on the way out, and again on arrival ----------
+const glitchLayer = document.querySelector(".glitch");
+function glitch(ms) {
+  if (!glitchLayer || reduceMotion) return Promise.resolve();
+  const colors = ["var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)"];
+  glitchLayer.innerHTML = Array.from({ length: 9 }, (_, i) =>
+    `<span style="top:${(Math.random() * 92).toFixed(1)}%; height:${(2 + Math.random() * 9).toFixed(1)}%; background:${colors[i % 4]}; animation-delay:-${(Math.random() * 0.1).toFixed(2)}s"></span>`).join("");
+  root.classList.add("glitching");
+  return new Promise((r) => setTimeout(() => { root.classList.remove("glitching"); r(); }, ms));
+}
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[href]");
+  if (!a || a.target === "_blank" || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const url = new URL(a.href, location.href);
+  if (url.origin !== location.origin || url.pathname === location.pathname || reduceMotion) return; // same page: plain anchor scroll
+  e.preventDefault();
+  try { sessionStorage.setItem("glitch-in", "1"); } catch {}
+  glitch(380).then(() => { location.href = url.href; });
+});
+try { if (sessionStorage.getItem("glitch-in")) { sessionStorage.removeItem("glitch-in"); glitch(300); } } catch {}
+// coming back via the browser's back button can restore the page mid-glitch
+addEventListener("pageshow", () => root.classList.remove("glitching"));
+
+// ---------- performance: pause the hero's looping avatar while it's off screen ----------
+const hero = document.querySelector(".hero");
+if (hero) new IntersectionObserver(([e]) => hero.classList.toggle("paused", !e.isIntersecting)).observe(hero);
 
 // ---------- reveal sections on scroll ----------
 const io = new IntersectionObserver((entries) => entries.forEach((e) => {
