@@ -231,6 +231,8 @@ section { padding: 90px 0; }
   -webkit-mask: var(--glyph) center / contain no-repeat; mask: var(--glyph) center / contain no-repeat;
   transition: transform .45s var(--ease-out);
 }
+/* tech logos keep their own brand colors (an <img>, not a tinted mask) */
+.skill-icon.logo { background: none; -webkit-mask: none; mask: none; object-fit: contain; }
 @media (hover: hover) and (pointer: fine) {
   .skill:hover { transform: translateY(-3px); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
   .skill:hover .skill-icon { transform: rotate(-8deg) scale(1.12); }
@@ -473,7 +475,6 @@ section[id] { scroll-margin-top: 70px; }
 .trail-icon {
   position: fixed; top: 0; left: 0; z-index: 90; width: 22px; height: 22px; margin: -11px 0 0 -11px;
   pointer-events: none; opacity: 0;
-  -webkit-mask: var(--glyph) center / contain no-repeat; mask: var(--glyph) center / contain no-repeat;
 }
 .cursor-label {
   position: fixed; top: 0; left: 0; z-index: 95; pointer-events: none; margin: 16px 0 0 16px;
@@ -491,69 +492,16 @@ section[id] { scroll-margin-top: 70px; }
 main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s var(--ease-out); }
 .warping main, .warping .nav, .warping footer { opacity: 0; transform: scale(.96); transition-duration: .35s; }
 .warp-in main, .warp-in .nav, .warp-in footer { opacity: 0; transform: scale(1.03); transition: none; }
-/* the browser crossfades the two pages (cross-document view transition), so there's no blank frame between
-   the stretched stars of the old page and the stretched stars of the new one */
+/* where the browser supports cross-document view transitions (Chrome, Edge, Safari 18.2+), navigation starts at
+   once and the browser itself animates between the two pages on the GPU: the old page zooms past and fades while
+   the new one fades in and its stars shrink from streaks back to points. No waiting on the old page first. */
 @media (prefers-reduced-motion: no-preference) {
   @view-transition { navigation: auto; }
-  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+  ::view-transition-old(root) { animation: page-out .38s cubic-bezier(0.55, 0, 1, 0.45) both; }
+  ::view-transition-new(root) { animation: page-in .45s cubic-bezier(0.23, 1, 0.32, 1) both; }
 }
-
-/* skills: when you scroll there, the tech logos burst out of a stack into an orbit; a few seconds later each logo
-   flies to its tile in the group cards and the cards take over (sequence in script.js). The orbit sits on top of the
-   grid, whose cards wait invisible underneath so nothing below jumps when the orbit goes away. */
-.skills-stage { position: relative; }
-.skills-stage:not(.dispersed) .skill-group { opacity: 0; translate: 0 24px; }
-.skill-group { transition: opacity .7s var(--ease-out), translate .7s var(--ease-out); transition-delay: calc(var(--i) * 90ms + 200ms); }
-.skills-stage.dispersed .orbit { opacity: 0; scale: .85; pointer-events: none; }
-.skills-stage.done .orbit { display: none; }
-.skill-icon.fly { position: absolute; z-index: 60; margin: 0; transform-origin: 0 0; pointer-events: none; }
-/* rings built in script.js; --r animates thanks to @property */
-@property --r { syntax: "<length>"; inherits: false; initial-value: 0px; }
-.orbit {
-  position: absolute; left: 50%; top: 0; translate: -50% 0; z-index: 1; width: min(100%, 600px); aspect-ratio: 1;
-  container-type: size; transition: opacity .6s var(--ease-out), scale .7s var(--ease-out);
-}
-.orbit .ring { position: absolute; inset: 0; animation: spin var(--dur) linear infinite; }
-.orbit .ring::before {
-  content: ""; position: absolute; inset: calc(50% - var(--R)); border-radius: 50%;
-  border: 1.5px dashed color-mix(in srgb, var(--c2) 30%, transparent);
-  opacity: 0; transition: opacity .8s ease .6s;
-}
-.orbit.launched .ring::before { opacity: 1; }
-.orbit .r2 { animation-direction: reverse; }
-.orb {
-  position: absolute; left: 50%; top: 50%; width: 11cqw; height: 11cqw; margin: -5.5cqw 0 0 -5.5cqw;
-  --r: 0px; transform: rotate(var(--a)) translateX(var(--r)) rotate(calc(-1 * var(--a)));
-  opacity: 0; scale: .5;
-  /* flying back into the stack is quick; flying out overshoots a little, like a burst */
-  transition: --r .5s var(--ease-in-out), opacity .3s, scale .5s var(--ease-out);
-}
-.orbit.launched .orb {
-  --r: var(--R); opacity: 1; scale: 1;
-  transition: --r 1.4s cubic-bezier(0.34, 1.4, 0.64, 1), opacity .4s, scale .9s var(--ease-out);
-  transition-delay: calc(var(--k) * 60ms + 150ms);
-}
-.orb-tile {
-  width: 100%; height: 100%; display: grid; place-items: center; border-radius: 28%;
-  background: var(--surface); border: 2px solid color-mix(in srgb, var(--accent) 45%, var(--border));
-  box-shadow: var(--shadow); position: relative;
-  animation: spin var(--dur) linear infinite reverse; /* cancels the ring's turn so logos stay upright */
-}
-.r2 .orb-tile { animation-direction: normal; }
-.orb-tile .skill-icon { width: 46%; height: 46%; }
-.orb-tile::after {
-  content: attr(data-name); position: absolute; top: calc(100% + 8px); left: 50%; translate: -50% 4px;
-  white-space: nowrap; font-size: .8rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;
-  background: var(--text); color: var(--bg); opacity: 0; pointer-events: none; transition: opacity .2s, translate .2s var(--ease-out);
-}
-.orb-tile:hover::after { opacity: 1; translate: -50% 0; }
-.orbit:hover .ring, .orbit:hover .orb-tile { animation-play-state: paused; }
-.orbit-core {
-  position: absolute; left: 50%; top: 50%; width: 18cqw; height: 18cqw; margin: -9cqw 0 0 -9cqw; border-radius: 50%;
-  display: grid; place-items: center; color: #fff; font: 600 4.5cqw "JetBrains Mono", monospace;
-  background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3)); box-shadow: 0 0 0 10px color-mix(in srgb, var(--c2) 12%, transparent);
-}
-@keyframes spin { to { rotate: 360deg; } }
+@keyframes page-out { to { opacity: 0; transform: scale(1.06); } }
+@keyframes page-in { from { opacity: 0; } }
 
 /* hero buttons in brushed chrome; the highlight follows the pointer (--px from script.js) */
 .btn.chrome {
@@ -636,6 +584,4 @@ main, .nav, footer { transition: opacity .45s var(--ease-out), transform .45s va
   .progress { display: none; }
   .role-wipe::after { display: none; }
   .shooting { display: none; }
-  .skills-stage .orbit { display: none; }
-  .skills-stage .skill-group { opacity: 1; translate: none; }
 }

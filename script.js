@@ -16,15 +16,16 @@ function socialsHTML() {
   links.push(`<a href="mailto:${esc(SITE.email)}" aria-label="email">${icons.email}</a>`);
   return links.join("");
 }
-// skill icons: tech logos from Devicon, concept icons from Tabler (both MIT); drawn as a mask in the group's color.
+// skill icons: tech logos from Devicon in their original colors, concept icons from Tabler drawn in the group's
+// color (both MIT).
 // A skill that isn't listed here gets a generic code icon, so new skills in data.js still render.
 const DEVICON = "https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/";
 const TABLER = "https://cdn.jsdelivr.net/npm/@tabler/icons@3.24.0/icons/outline/";
 const skillIcons = {
-  "Python": "python/python-plain", "C++": "cplusplus/cplusplus-plain", "C": "c/c-plain", "Java": "java/java-plain",
-  "JavaScript": "javascript/javascript-plain", "React": "react/react-original", "Node.js/Express": "nodejs/nodejs-plain",
-  "MongoDB": "mongodb/mongodb-plain", "Git": "git/git-plain", "Docker": "docker/docker-plain", "CMake": "cmake/cmake-plain",
-  "Linux": "linux/linux-plain", "Grafana": "grafana/grafana-plain",
+  "Python": "python/python-original", "C++": "cplusplus/cplusplus-original", "C": "c/c-original", "Java": "java/java-original",
+  "JavaScript": "javascript/javascript-original", "React": "react/react-original", "Node.js/Express": "nodejs/nodejs-original",
+  "MongoDB": "mongodb/mongodb-original", "Git": "git/git-original", "Docker": "docker/docker-original", "CMake": "cmake/cmake-original",
+  "Linux": "linux/linux-original", "Grafana": "grafana/grafana-original",
   "REST APIs": "t:api", "JWT": "t:key", "OOP": "t:box-model-2", "Data Structures & Algorithms": "t:binary-tree",
   "GoogleTest": "t:test-pipe", "Unit testing": "t:checklist", "Machine Learning": "t:brain",
   "Neural networks": "t:topology-star-3", "Claude Code": "t:sparkles", "AI-assisted dev": "t:robot",
@@ -35,6 +36,9 @@ const skillIcon = (name) => {
   const k = skillIcons[name] || "t:code";
   return k.startsWith("t:") ? `${TABLER}${k.slice(2)}.svg` : `${DEVICON}${k}.svg`;
 };
+const skillIconHTML = (name) => (skillIcons[name] || "t:").startsWith("t:")
+  ? `<span class="skill-icon" style="--glyph:url('${skillIcon(name)}')" aria-hidden="true"></span>`
+  : `<img class="skill-icon logo" src="${skillIcon(name)}" alt="" loading="lazy" decoding="async">`;
 const chips = (items) => `<div class="chips">${items.map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</div>`;
 // muted looping demo clip; started from JS (see startDemoVideos) since mobile browsers often ignore autoplay
 const demoVideo = (v, title, onPage = false, attrs = "") => `
@@ -84,28 +88,15 @@ function renderHome() {
   $("heroSocials").innerHTML = $("footSocials").innerHTML = socialsHTML();
 
   $("aboutText").innerHTML = SITE.about.map((p, i) => `<p style="--i:${i}">${esc(p)}</p>`).join("");
-  const groupOf = {};
-  Object.entries(SITE.skills).forEach(([, items], i) => items.forEach((s) => (groupOf[s] = i)));
-  const logos = Object.keys(groupOf).filter((s) => skillIcons[s] && !skillIcons[s].startsWith("t:"));
-  const inner = logos.filter((s) => groupOf[s] === 0), outer = logos.filter((s) => groupOf[s] !== 0);
-  const ring = (list, cls, R, dur, k0) => `
-    <div class="ring ${cls}" style="--dur:${dur}s; --R:${R}cqw">${list.map((s, i) => `
-      <div class="orb" style="--a:${(360 / list.length) * i}deg; --R:${R}cqw; --k:${k0 + i}; --accent:${accents[groupOf[s] % 4]}">
-        <span class="orb-tile" data-name="${esc(s)}"><span class="skill-icon" style="--glyph:url('${skillIcon(s)}')"></span></span>
-      </div>`).join("")}
-    </div>`;
-  $("orbit").innerHTML = `<div class="orbit-core">&lt;/&gt;</div>${ring(inner, "r1", 24, 60, 0)}${ring(outer, "r2", 43, 90, inner.length)}`;
-
   cvGame($("cvBtn"));
 
   $("skillGrid").innerHTML = Object.entries(SITE.skills).map(([group, items], i) => `
     <div class="skill-group" style="--accent:${accents[i % 4]}; --i:${i}">
       <h4>${esc(group)}</h4>
       <ul class="skill-list">${items.map((s) => `
-        <li class="skill" data-skill="${esc(s)}"><span class="skill-icon" style="--glyph:url('${skillIcon(s)}')" aria-hidden="true"></span>${esc(s)}</li>`).join("")}
+        <li class="skill">${skillIconHTML(s)}${esc(s)}</li>`).join("")}
       </ul>
     </div>`).join("");
-  skillsIntro();
 
   $("projectGrid").innerHTML = SITE.projects.map((p, i) => `
     <article class="card" style="--accent:${accents[i % 4]}; --i:${i}">
@@ -154,43 +145,6 @@ function renderHome() {
   $("role").textContent = SITE.role; // revealed by the CSS wipe (.role-wipe)
 }
 
-
-// skills intro: orbit first, then the logos fly into the group cards (once per visit to the page)
-function skillsIntro() {
-  const stage = $("skillsStage"), orbit = $("orbit");
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { stage.classList.add("dispersed", "done"); return; }
-  const io = new IntersectionObserver(([e]) => {
-    if (e.intersectionRatio < 0.45) return;
-    io.disconnect();
-    orbit.classList.add("launched");
-    setTimeout(disperse, 3200); // burst (~1.5s) plus a moment of orbiting
-  }, { threshold: 0.45 });
-  io.observe(orbit);
-
-  function disperse() {
-    const targets = new Map([...document.querySelectorAll("#skillGrid .skill")].map((li) => [li.dataset.skill, li.querySelector(".skill-icon")]));
-    orbit.querySelectorAll(".orb-tile").forEach((tile, i) => {
-      const icon = tile.querySelector(".skill-icon"), dest = targets.get(tile.dataset.name);
-      if (!dest) return;
-      const a = icon.getBoundingClientRect(), b = dest.getBoundingClientRect();
-      if (!a.width || !b.width) return;
-      // a copy of the logo travels in page coordinates, so scrolling mid-flight doesn't throw it off
-      const fly = document.createElement("span");
-      fly.className = "skill-icon fly";
-      fly.style.cssText = `--glyph:${icon.style.getPropertyValue("--glyph")}; background:${getComputedStyle(icon).backgroundColor};
-        left:${a.left + scrollX}px; top:${a.top + scrollY}px; width:${a.width}px; height:${a.height}px`;
-      document.body.append(fly);
-      dest.style.visibility = "hidden";
-      fly.animate([
-        { transform: "none" },
-        { transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${b.width / a.width})` },
-      ], { duration: 950, delay: i * 45, easing: "cubic-bezier(0.65, 0, 0.35, 1)", fill: "both" })
-        .finished.then(() => { dest.style.visibility = ""; fly.remove(); });
-    });
-    stage.classList.add("dispersed");
-    setTimeout(() => stage.classList.add("done"), 1800);
-  }
-}
 
 // ---------- project detail page ----------
 function renderProject() {
@@ -423,8 +377,7 @@ if (finePointer && !reduceMotion) {
     if (Math.hypot(e.clientX - last[0], e.clientY - last[1]) < 70) return;
     last = [e.clientX, e.clientY];
     const el = pool[n % pool.length], x = e.clientX, y = e.clientY;
-    el.style.setProperty("--glyph", `url('${trailIcons[n % trailIcons.length]}')`);
-    el.style.background = accents[n % 4];
+    el.style.background = `url('${trailIcons[n % trailIcons.length]}') center / contain no-repeat`;
     n++;
     el.getAnimations().forEach((a) => a.cancel());
     const dx = (Math.random() - 0.5) * 36, dy = 16 + Math.random() * 18, rot = (Math.random() - 0.5) * 50;
@@ -443,8 +396,11 @@ document.addEventListener("click", (e) => {
   if (!a || a.target === "_blank" || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
   const url = new URL(a.href, location.href);
   if (url.origin !== location.origin || url.pathname === location.pathname || reduceMotion) return; // same page: plain anchor scroll
-  e.preventDefault();
   try { sessionStorage.setItem("warp", "1"); } catch {}
+  // browsers with cross-document view transitions animate the change themselves (see style.css): just navigate
+  if ("onpagereveal" in window) return;
+  // others: play the jump on this page first, then navigate
+  e.preventDefault();
   root.classList.add("warping");
   setTimeout(() => { location.href = url.href; }, 420);
 });
