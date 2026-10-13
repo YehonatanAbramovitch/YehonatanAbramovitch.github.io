@@ -96,10 +96,11 @@ function renderHome() {
     <article class="card" style="--accent:${accents[i % 4]}; --i:${i}">
       ${p.video
         // clicking the clip (or the badge) opens the project's screenshots
-        ? `<div class="thumb has-video" data-cursor="view">
-             ${demoVideo(p.video, p.title, false, p.images && p.images.length ? `data-project="${i}"` : "")}
-             ${p.images && p.images.length ? `<button class="count" data-project="${i}" aria-label="View ${esc(p.title)} screenshots">${shotsLabel(p.images)}</button>` : ""}
-           </div>`
+        ? p.images && p.images.length
+          ? `<div class="thumb has-video" style="view-transition-name:cover-${esc(p.id)}" data-cursor="view" data-project="${i}" role="button" tabindex="0" aria-label="View ${esc(p.title)} screenshots">
+               ${demoVideo(p.video, p.title)}
+             </div>`
+          : `<div class="thumb has-video">${demoVideo(p.video, p.title)}</div>`
         : p.images && p.images.length
         ? `<button class="thumb" data-project="${i}" data-cursor="view" aria-label="View ${esc(p.title)} screenshots">
              <img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}" loading="lazy">
@@ -107,7 +108,7 @@ function renderHome() {
            </button>`
         : `<div class="thumb">${esc(p.title[0])}</div>`}
       <div class="body">
-        <h4>${esc(p.title)}</h4>
+        <h4 style="view-transition-name:title-${esc(p.id)}">${esc(p.title)}</h4>
         ${list(p.bullets)}
         ${chips(p.tags)}
         <div class="actions">
@@ -127,31 +128,17 @@ function renderHome() {
       ${e.bullets ? list(e.bullets) : ""}
     </li>`).join("");
 
-  document.querySelectorAll("[data-project]").forEach((btn) =>
-    btn.onclick = () => openLightbox(SITE.projects[btn.dataset.project].images, 0));
+  document.querySelectorAll("[data-project]").forEach((btn) => {
+    btn.onclick = () => openLightbox(SITE.projects[btn.dataset.project].images, 0);
+    // the video cover is a div acting as a button, so give it the keyboard behavior too
+    if (btn.tagName !== "BUTTON") btn.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); btn.onclick(); }
+    };
+  });
 
-  scramble($("role"), SITE.role);
+  $("role").textContent = SITE.role; // revealed by the CSS wipe (.role-wipe)
 }
 
-// decode effect: random glyphs settle into the real text, left to right
-function scramble(el, text) {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = text; return; }
-  const glyphs = "!<>-_\\/[]{}=+*^?#01";
-  const start = performance.now() + 450; // let the hero entrance land first
-  const perChar = 38, settle = 260;
-  el.setAttribute("aria-label", text);
-  (function frame(now) {
-    const t = now - start;
-    let out = "", done = true;
-    for (let i = 0; i < text.length; i++) {
-      const lockAt = i * perChar + settle;
-      if (text[i] === " " || t >= lockAt) out += t < 0 && text[i] !== " " ? "" : text[i];
-      else { done = false; out += t > i * perChar - settle ? glyphs[(Math.random() * glyphs.length) | 0] : ""; }
-    }
-    el.textContent = out;
-    if (!done) requestAnimationFrame(frame);
-  })(performance.now());
-}
 
 // ---------- project detail page ----------
 function renderProject() {
@@ -201,11 +188,11 @@ function renderProject() {
     <a class="back" href="index.html#projects">← All projects</a>
     <header class="p-hero">
       <div class="meta">${d.meta.map((m) => `<span>${esc(m)}</span>`).join("")}</div>
-      <h1>${esc(p.title)}</h1>
+      <h1 style="view-transition-name:title-${esc(p.id)}">${esc(p.title)}</h1>
       ${chips(p.tags)}
       <div class="cta">${links}</div>
       ${p.video
-        ? `<div class="p-cover p-video">${demoVideo(p.video, p.title, true)}</div>`
+        ? `<div class="p-cover p-video" style="view-transition-name:cover-${esc(p.id)}">${demoVideo(p.video, p.title, true)}</div>`
         : p.images.length ? `<button class="p-cover shot" data-i="0" aria-label="Enlarge screenshot"><img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}"></button>` : ""}
     </header>
     ${section("01.", "The problem", `<p class="lead">${esc(d.problem)}</p>`)}
@@ -275,7 +262,10 @@ $("themeBtn").onclick = (e) => {
   const r = e.currentTarget.getBoundingClientRect();
   const x = r.left + r.width / 2, y = r.top + r.height / 2;
   const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  root.classList.add("theme-switching");
   const t = document.startViewTransition(flip);
+  const clean = () => root.classList.remove("theme-switching");
+  t.finished.then(clean, clean);
   t.ready.then(() => {
     root.animate(
       { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
@@ -305,6 +295,35 @@ if (navLinks.length) {
   }), { rootMargin: "-45% 0px -50% 0px" });
   navLinks.forEach((a) => { const s = document.querySelector(a.getAttribute("href")); if (s) spy.observe(s); });
 }
+
+// ---------- background: topographic contour lines (generated once; CSS turns them on scroll and recolors per section) ----------
+(function topo() {
+  const W = 1600, H = 1000;
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647; // fixed seed: same map on every visit
+  const hills = [[260, 220, 14], [1300, 300, 12], [820, 820, 15], [1450, 900, 9], [120, 880, 8]];
+  let groups = "";
+  hills.forEach(([cx, cy, rings], h) => {
+    // a few low-frequency waves per hill make each ring wobble like real terrain
+    const waves = [2, 3, 5].map((k) => [k, rnd() * Math.PI * 2, 0.06 + rnd() * 0.08]);
+    let paths = "";
+    for (let r = 1; r <= rings; r++) {
+      const base = r * 34, pts = [];
+      for (let a = 0; a < 64; a++) {
+        const t = (a / 64) * Math.PI * 2;
+        const wob = waves.reduce((s, [k, ph, amp]) => s + amp * Math.sin(k * t + ph + r * 0.35), 1);
+        pts.push(`${(cx + Math.cos(t) * base * wob).toFixed(1)},${(cy + Math.sin(t) * base * wob * 0.8).toFixed(1)}`);
+      }
+      paths += `<path d="M${pts.join("L")}Z"/>`;
+    }
+    groups += `<g class="hill" style="--h:${h}; transform-origin:${cx}px ${cy}px">${paths}</g>`;
+  });
+  const layer = document.createElement("div");
+  layer.className = "topo";
+  layer.setAttribute("aria-hidden", "true");
+  layer.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${groups}</svg>`;
+  document.body.prepend(layer);
+})();
 
 // ---------- background: the color blobs drift and recolor for each section ----------
 const sections = document.querySelectorAll("main > section");

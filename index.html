@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=22">
+  <link rel="stylesheet" href="style.css?v=23">
   <!-- apply the saved theme before first paint so dark-mode visitors don't see a light flash -->
   <script>try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
@@ -54,7 +54,7 @@
       <div class="avatar" id="avatar"></div>
       <p class="hello mono">Hi, I'm</p>
       <h1 id="name"></h1>
-      <h2 class="role"><span id="role"></span><span class="cursor">_</span></h2>
+      <h2 class="role"><span class="role-wipe"><span id="role"></span></span></h2>
       <p class="tagline" id="tagline"></p>
       <div class="cta">
         <a class="btn primary" href="#projects">See my work</a>
@@ -104,7 +104,7 @@
   </dialog>
 
   <!-- bump ?v= on each update so browsers fetch fresh files -->
-  <script src="data.js?v=22"></script>
-  <script src="script.js?v=22"></script>
+  <script src="data.js?v=23"></script>
+  <script src="script.js?v=23"></script>
 </body>
 </html>
