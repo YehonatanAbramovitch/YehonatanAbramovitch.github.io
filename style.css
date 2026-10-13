@@ -10,6 +10,8 @@
   --c4: #ffb627;  /* amber */
   --shadow: 0 10px 30px rgba(60, 30, 120, .08);
   --radius: 20px;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 :root[data-theme="dark"] {
   --bg: #13111f;
@@ -28,8 +30,9 @@ body {
   color: var(--text);
   line-height: 1.6;
   overflow-x: hidden;
-  transition: background .3s, color .3s;
 }
+/* theme switch: script.js animates the new theme in as a growing circle, so skip the default crossfade */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 a { color: inherit; text-decoration: none; }
 .mono { font-family: "JetBrains Mono", monospace; }
 
@@ -57,13 +60,38 @@ a { color: inherit; text-decoration: none; }
 .nav nav { margin-left: auto; display: flex; gap: 22px; }
 .nav nav a { font-weight: 500; position: relative; }
 .nav nav a::after {
-  content: ""; position: absolute; left: 0; bottom: -3px; height: 3px; width: 0;
-  background: var(--c1); border-radius: 3px; transition: width .25s;
+  content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 3px;
+  background: var(--c1); border-radius: 3px;
+  transform: scaleX(0); transform-origin: right; transition: transform .3s var(--ease-out);
 }
-.nav nav a:hover::after { width: 100%; }
-.theme {
+.nav nav a.active::after { transform: scaleX(1); transform-origin: left; }
+@media (hover: hover) and (pointer: fine) {
+  .nav nav a:hover::after { transform: scaleX(1); transform-origin: left; }
+}
+.theme, .menu-btn {
   border: 2px solid var(--border); background: var(--surface); color: var(--text);
-  width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 1.1rem;
+  width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; flex-shrink: 0;
+  transition: transform .16s var(--ease-out), border-color .2s;
+}
+.theme:active, .menu-btn:active { transform: scale(.92); }
+.theme svg, .menu-btn svg { width: 18px; height: 18px; grid-area: 1 / 1; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.theme svg { transition: transform .45s var(--ease-out), opacity .25s; }
+.theme .i-sun { opacity: 0; transform: rotate(-90deg) scale(.6); }
+:root[data-theme="dark"] .theme .i-moon { opacity: 0; transform: rotate(90deg) scale(.6); }
+:root[data-theme="dark"] .theme .i-sun { opacity: 1; transform: none; }
+.menu-btn { display: none; }
+
+/* reading progress: a thin bar that fills as the page scrolls (CSS scroll timeline, no JS) */
+.progress { display: none; }
+@supports (animation-timeline: scroll()) {
+  .progress {
+    display: block; position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 11;
+    background: linear-gradient(90deg, var(--c1), var(--c2), var(--c3));
+    transform-origin: left; transform: scaleX(0);
+    animation: progress linear both; animation-timeline: scroll(root);
+  }
+  @keyframes progress { to { transform: scaleX(1); } }
 }
 
 main { max-width: 1080px; margin: 0 auto; padding: 0 clamp(16px, 5vw, 32px); }
@@ -96,9 +124,13 @@ section { padding: 90px 0; }
 .cta { display: flex; flex-wrap: wrap; gap: 14px; }
 .btn {
   display: inline-block; padding: 13px 26px; border-radius: 999px; font-weight: 700;
-  border: 2px solid var(--text); transition: transform .2s, box-shadow .2s;
+  border: 2px solid var(--text); transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out);
 }
-.btn:hover { transform: translateY(-3px); box-shadow: 5px 5px 0 var(--c4); }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { transform: translateY(-3px); box-shadow: 5px 5px 0 var(--c4); }
+}
+/* press feedback: the button sinks into its shadow */
+.btn:active { transform: translateY(0) scale(.97); box-shadow: 1px 1px 0 var(--c4); transition-duration: .1s; }
 .btn.primary { background: var(--text); color: var(--bg); }
 .btn.big { font-size: 1.2rem; padding: 16px 34px; margin: 10px 0 24px; }
 .btn.small { padding: 9px 18px; font-size: .95rem; }
@@ -114,9 +146,13 @@ section { padding: 90px 0; }
 .socials { display: flex; gap: 12px; margin-top: 28px; }
 .socials a {
   width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
-  background: var(--surface); border: 2px solid var(--border); transition: transform .2s, border-color .2s;
+  background: var(--surface); border: 2px solid var(--border);
+  transition: transform .3s var(--ease-out), border-color .2s, color .2s;
 }
-.socials a:hover { transform: rotate(-8deg) scale(1.1); border-color: var(--c2); }
+@media (hover: hover) and (pointer: fine) {
+  .socials a:hover { transform: rotate(-8deg) scale(1.1); border-color: var(--c2); color: var(--c2); }
+}
+.socials a:active { transform: scale(.94); }
 .socials svg { width: 22px; height: 22px; fill: currentColor; }
 
 /* section titles */
@@ -142,9 +178,19 @@ section { padding: 90px 0; }
 .card {
   background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
   overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow);
-  transition: transform .25s, box-shadow .25s, border-color .25s;
+  position: relative; isolation: isolate;
+  transition: transform .4s var(--ease-out), box-shadow .4s var(--ease-out), border-color .25s;
 }
-.card:hover { transform: translateY(-6px) rotate(-.5deg); border-color: var(--accent); box-shadow: 8px 8px 0 var(--accent); }
+/* spotlight: a soft glow in the card's accent that follows the pointer (position set from script.js) */
+.card::before {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%);
+  opacity: 0; transition: opacity .3s;
+}
+@media (hover: hover) and (pointer: fine) {
+  .card:hover { transform: translateY(-6px) rotate(-.5deg); border-color: var(--accent); box-shadow: 8px 8px 0 var(--accent); }
+  .card:hover::before { opacity: 1; }
+}
 .card .thumb {
   /* fixed ratio so every project cover is exactly the same size */
   aspect-ratio: 16 / 9; width: 100%; overflow: hidden; flex-shrink: 0;
@@ -302,17 +348,69 @@ button.thumb:hover img { transform: scale(1.05); }
 
 footer { text-align: center; padding: 30px; color: var(--muted); font-size: .9rem; }
 
-/* scroll reveal */
-.reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s, transform .7s; }
+/* scroll reveal: the section rises in, then its items follow in a short cascade (--i set in script.js) */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s var(--ease-out), transform .8s var(--ease-out); }
 .reveal.visible { opacity: 1; transform: none; }
+/* "backwards" fill only: once the entrance ends, hover transforms take over again */
+.reveal:not(.visible) [style*="--i"] { opacity: 0; }
+.reveal.visible [style*="--i"] { animation: rise .7s var(--ease-out) backwards; animation-delay: calc(var(--i) * 70ms + 120ms); }
+
+/* hero entrance: name, role and actions arrive in sequence on load */
+.hero > * { animation: rise .9s var(--ease-out) backwards; animation-delay: calc(var(--n, 0) * 80ms + 60ms); }
+.hero > :nth-child(2) { --n: 1; }
+.hero > :nth-child(3) { --n: 2; }
+.hero > :nth-child(4) { --n: 3; }
+.hero > :nth-child(5) { --n: 4; }
+.hero > :nth-child(6) { --n: 5; }
+.hero > :nth-child(7) { --n: 6; }
+.hero .avatar { animation: rise .9s var(--ease-out) backwards, morph 8s ease-in-out infinite; }
+@keyframes rise { from { opacity: 0; transform: translateY(20px); filter: blur(6px); } }
+
+/* timeline: the line draws itself as you scroll past it */
+@supports (animation-timeline: view()) {
+  .timeline::before {
+    transform-origin: top; animation: draw linear both;
+    animation-timeline: view(); animation-range: entry 10% cover 60%;
+  }
+  @keyframes draw { from { transform: scaleY(0); } }
+}
+
+/* lightbox: opens with a short scale-in, slides crossfade with a touch of blur */
+.lightbox[open] figure { transition: opacity .3s var(--ease-out), transform .3s var(--ease-out); }
+@starting-style { .lightbox[open] figure { opacity: 0; transform: scale(.96); } }
+.lightbox img { transition: opacity .2s ease, filter .2s ease; }
+.lightbox img.swap { opacity: .3; filter: blur(4px); }
+.lb-nav, .lb-close { transition: background .2s, transform .16s var(--ease-out); }
+.lb-nav:active, .lb-close:active { transform: scale(.92); }
+
+/* browser surfaces in the site's palette */
+::selection { background: color-mix(in srgb, var(--c2) 30%, transparent); color: var(--text); }
+html { scrollbar-color: color-mix(in srgb, var(--c2) 45%, var(--border)) transparent; accent-color: var(--c2); }
+:focus-visible { outline: 3px solid var(--c2); outline-offset: 3px; border-radius: 6px; }
+.btn:focus-visible, .socials a:focus-visible, .theme:focus-visible, .menu-btn:focus-visible { border-radius: 999px; }
+.card .thumb:focus-visible, .shots .shot:focus-visible { outline-offset: -3px; }
+section[id] { scroll-margin-top: 70px; }
 
 @media (max-width: 720px) {
-  .nav nav { display: none; }
-  .theme { margin-left: auto; }
+  .menu-btn { display: grid; margin-left: auto; }
+  .nav { gap: 10px; }
+  .nav nav {
+    position: absolute; top: calc(100% + 6px); right: clamp(16px, 5vw, 64px); margin: 0;
+    flex-direction: column; gap: 4px; padding: 10px; min-width: 200px;
+    background: var(--surface); border: 2px solid var(--border); border-radius: 16px; box-shadow: var(--shadow);
+    transform-origin: top right;
+    transition: opacity .2s var(--ease-out), transform .2s var(--ease-out), visibility 0s .2s;
+    opacity: 0; transform: scale(.96) translateY(-4px); visibility: hidden;
+  }
+  .nav.open nav { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
+  .nav nav a { padding: 10px 14px; border-radius: 10px; }
+  .nav nav a::after { display: none; }
+  .nav nav a.active { background: color-mix(in srgb, var(--c2) 12%, transparent); }
   .about-grid { grid-template-columns: 1fr; gap: 24px; }
   section { padding: 64px 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .reveal { opacity: 1; transform: none; }
+  .reveal, .reveal:not(.visible) [style*="--i"] { opacity: 1; transform: none; }
+  .progress { display: none; }
 }

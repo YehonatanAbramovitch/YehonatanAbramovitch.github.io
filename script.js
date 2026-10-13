@@ -66,10 +66,10 @@ function renderHome() {
 
   $("aboutText").innerHTML = SITE.about.map((p) => `<p>${esc(p)}</p>`).join("");
   $("skills").innerHTML = Object.entries(SITE.skills).map(([group, items], i) => `
-    <div style="--accent:${accents[i % 4]}"><h4>${esc(group)}</h4>${chips(items)}</div>`).join("");
+    <div style="--accent:${accents[i % 4]}; --i:${i}"><h4>${esc(group)}</h4>${chips(items)}</div>`).join("");
 
   $("projectGrid").innerHTML = SITE.projects.map((p, i) => `
-    <article class="card" style="--accent:${accents[i % 4]}">
+    <article class="card" style="--accent:${accents[i % 4]}; --i:${i}">
       ${p.video
         // with a video, tapping the cover only plays the clip; the screenshots open from the badge
         ? `<div class="thumb has-video">
@@ -95,7 +95,7 @@ function renderHome() {
     </article>`).join("");
 
   $("timeline").innerHTML = SITE.experience.map((e, i) => `
-    <li style="--accent:${accents[i % 4]}">
+    <li style="--accent:${accents[i % 4]}; --i:${i}">
       <span class="when">${esc(e.when)}</span>
       <h4>${esc(e.title)}</h4>
       <div class="place">${esc(e.place)}</div>
@@ -144,13 +144,13 @@ function renderProject() {
     </div>`;
 
   const challenges = `<div class="challenges">${d.challenges.map((c, i) => `
-    <div class="challenge">
+    <div class="challenge" style="--i:${i}">
       <div class="c-q"><span class="mono">#${i + 1}</span> ${esc(c.challenge)}</div>
       <div class="c-a"><span class="label">Solution</span>${esc(c.solution)}</div>
     </div>`).join("")}</div>`;
 
   const shots = `<div class="shots">${p.images.map((img, i) => `
-    <figure><button class="shot" data-i="${i}" aria-label="Enlarge: ${esc(img.caption)}"><img src="${esc(img.src)}" alt="${esc(img.caption)}" loading="lazy"></button>
+    <figure style="--i:${i}"><button class="shot" data-i="${i}" aria-label="Enlarge: ${esc(img.caption)}"><img src="${esc(img.src)}" alt="${esc(img.caption)}" loading="lazy"></button>
     <figcaption>${esc(img.caption)}</figcaption></figure>`).join("")}</div>`;
 
   const links = `
@@ -186,17 +186,28 @@ function renderProject() {
 // ---------- screenshot lightbox ----------
 const lb = $("lightbox");
 let lbImages = [], lbIndex = 0;
-function showSlide(n) {
+function showSlide(n, animate = true) {
   lbIndex = (n + lbImages.length) % lbImages.length;
   const img = lbImages[lbIndex];
-  $("lbImg").src = img.src;
-  $("lbImg").alt = img.caption;
-  $("lbCaption").textContent = `${img.caption}  ·  ${lbIndex + 1} / ${lbImages.length}`;
+  const el = $("lbImg");
+  const apply = () => {
+    el.src = img.src;
+    el.alt = img.caption;
+    $("lbCaption").textContent = `${img.caption}  ·  ${lbIndex + 1} / ${lbImages.length}`;
+  };
   lb.classList.toggle("single", lbImages.length < 2);
+  if (!animate) return apply();
+  // blur-crossfade between slides so the swap reads as one motion
+  el.classList.add("swap");
+  setTimeout(() => {
+    apply();
+    const done = () => el.classList.remove("swap");
+    el.decode ? el.decode().then(done, done) : done();
+  }, 120);
 }
 function openLightbox(images, start) {
   lbImages = images;
-  showSlide(start);
+  showSlide(start, false);
   lb.showModal();
 }
 $("lbPrev").onclick = () => showSlide(lbIndex - 1);
@@ -211,17 +222,58 @@ lb.onkeydown = (e) => {
 if (page === "project") renderProject(); else renderHome();
 startDemoVideos();
 
-// ---------- theme toggle (remembers choice) ----------
+// ---------- theme toggle (remembers choice; initial theme is set by the inline script in <head>) ----------
 const root = document.documentElement;
-try {
-  const saved = localStorage.getItem("theme");
-  if (saved) root.dataset.theme = saved;
-  else if (matchMedia("(prefers-color-scheme: dark)").matches) root.dataset.theme = "dark";
-} catch {}
-$("themeBtn").onclick = () => {
-  root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
-  try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+$("themeBtn").onclick = (e) => {
+  const flip = () => {
+    root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
+    try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+  };
+  if (!document.startViewTransition || reduceMotion) return flip();
+  // the new theme spreads out in a circle from the toggle button
+  const r = e.currentTarget.getBoundingClientRect();
+  const x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  const t = document.startViewTransition(flip);
+  t.ready.then(() => {
+    root.animate(
+      { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+      { duration: 550, easing: "cubic-bezier(0.77, 0, 0.175, 1)", pseudoElement: "::view-transition-new(root)" });
+  }).catch(() => {}); // skipped transitions (e.g. hidden tab) still apply the theme via flip()
+  t.finished.catch(() => {});
 };
+
+// ---------- mobile menu ----------
+const navBar = document.querySelector(".nav");
+const setMenu = (open) => {
+  navBar.classList.toggle("open", open);
+  $("menuBtn").setAttribute("aria-expanded", open);
+  $("menuBtn").setAttribute("aria-label", open ? "Close menu" : "Open menu");
+};
+$("menuBtn").onclick = () => setMenu(!navBar.classList.contains("open"));
+$("siteNav").addEventListener("click", (e) => { if (e.target.closest("a")) setMenu(false); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && navBar.classList.contains("open")) { setMenu(false); $("menuBtn").focus(); } });
+document.addEventListener("click", (e) => { if (!navBar.contains(e.target)) setMenu(false); });
+
+// ---------- nav: highlight the section currently on screen ----------
+const navLinks = [...document.querySelectorAll("#siteNav a[href^='#']")];
+if (navLinks.length) {
+  const spy = new IntersectionObserver((entries) => entries.forEach((e) => {
+    if (!e.isIntersecting) return;
+    navLinks.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === `#${e.target.id}`));
+  }), { rootMargin: "-45% 0px -50% 0px" });
+  navLinks.forEach((a) => { const s = document.querySelector(a.getAttribute("href")); if (s) spy.observe(s); });
+}
+
+// ---------- project cards: spotlight follows the pointer ----------
+if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
+  document.querySelectorAll(".card").forEach((card) => card.addEventListener("pointermove", (e) => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty("--mx", `${e.clientX - r.left}px`);
+    card.style.setProperty("--my", `${e.clientY - r.top}px`);
+  }));
+}
 
 // ---------- reveal sections on scroll ----------
 const io = new IntersectionObserver((entries) => entries.forEach((e) => {
