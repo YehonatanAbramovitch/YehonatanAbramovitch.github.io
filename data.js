@@ -116,7 +116,7 @@ const SITE = {
         "Improved modularity and runtime stability by separating game entities and responsibilities.",
       ],
       tags: ["Java", "OOP", "Design Patterns", "Game Dev"],
-      github: "https://github.com/YehonatanAbramovitch/Akanoid-Game",
+      github: "https://github.com/YehonatanAbramovitch/Arkanoid-Game",
       demo: "",
       video: { src: "images/arkanoid-demo.mp4", poster: "images/arkanoid-demo-poster.jpg", fit: "contain", bg: "#3c3c3c" },
       images: [
