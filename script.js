@@ -388,7 +388,6 @@ if (finePointer && !reduceMotion) {
     btn.addEventListener("pointermove", (e) => {
       const r = btn.getBoundingClientRect();
       btn.style.translate = `${(e.clientX - r.left - r.width / 2) * 0.25}px ${(e.clientY - r.top - r.height / 2) * 0.35}px`;
-      btn.style.setProperty("--px", `${((e.clientX - r.left) / r.width) * 100}%`);
     });
     btn.addEventListener("pointerleave", () => { btn.style.translate = ""; });
   });
