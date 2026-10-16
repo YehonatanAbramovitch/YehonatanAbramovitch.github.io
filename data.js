@@ -7,7 +7,7 @@ const SITE = {
   tagline: "Building software. Solving problems. Always learning.",
   status: "Open to student developer roles", // small tag above the greeting; leave empty to hide it
   email: "yona132132@gmail.com",
-  cvFile: "cv.pdf", // put your CV PDF next to index.html with this name
+  cvFile: "cv.pdf?v=2", // put your CV PDF next to index.html with this name
   photo: "",        // e.g. "me.jpg" - leave empty to show initials
   socials: {
     github: "https://github.com/YehonatanAbramovitch",
