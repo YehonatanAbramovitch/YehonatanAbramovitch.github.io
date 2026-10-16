@@ -439,6 +439,11 @@ button.thumb:hover img { transform: scale(1.05); }
 .bloom-result[data-kind="clear"] { border-color: #2fbf71; }
 .bloom-result[data-kind="blocked"] { border-color: #e8413c; }
 .bloom-result[data-kind="fp"] { border-color: #e9a23b; }
+.bloom-result[data-kind="added"] { border-color: var(--accent); }
+.bloom-result .verdict { font: 700 .8rem "JetBrains Mono", monospace; letter-spacing: .04em; margin-right: 6px; padding: 2px 8px; border-radius: 6px; color: #fff; background: var(--accent); }
+.bloom-result[data-kind="clear"] .verdict { background: #23a463; }
+.bloom-result[data-kind="blocked"] .verdict { background: #d8352f; }
+.bloom-result[data-kind="fp"] .verdict { background: #c9821a; }
 .bloom-list { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
 .bloom-list > .mono { font-size: .8rem; color: var(--muted); }
 .bloom-items { display: contents; }

@@ -46,6 +46,13 @@ Demos.bloom = (root) => {
   const result = root.querySelector(".bloom-result");
   const hashes = root.querySelector(".bloom-hashes");
 
+  // each answer starts with what kind of result it is
+  const verdicts = { clear: "TRUE NEGATIVE", blocked: "TRUE POSITIVE", fp: "FALSE POSITIVE", added: "ADDED" };
+  const say = (kind, msg) => {
+    result.dataset.kind = kind;
+    result.innerHTML = `<strong class="verdict">${verdicts[kind]}</strong> `;
+    result.append(msg);
+  };
   const paint = (probe = [], fresh = []) => {
     cells.forEach((c, i) => {
       c.classList.toggle("on", bits[i]);
@@ -67,9 +74,8 @@ Demos.bloom = (root) => {
     let msg, kind;
     if (!allOn) { msg = `Definitely not blacklisted: bit ${pos.find((p) => !bits[p])} is off. Answered with ${K} lookups and no list search.`; kind = "clear"; }
     else if (list.has(url)) { msg = "Blacklisted: all bits are on and the exact list confirms it, so this mail would be blocked."; kind = "blocked"; }
-    else { msg = "False positive: all bits are on, but the exact list doesn't contain it, so the mail still goes through. This is why matches are double-checked."; kind = "fp"; }
-    result.textContent = msg;
-    result.dataset.kind = kind;
+    else { msg = "All bits are on, but the exact list doesn't contain it, so the mail still goes through. This is why matches are double-checked."; kind = "fp"; }
+    say(kind, msg);
     paint(pos);
   };
 
@@ -87,8 +93,7 @@ Demos.bloom = (root) => {
     if (!url) { input.focus(); return; }
     const { pos, fresh } = add(url);
     hashes.textContent = pos.map((p, i) => `h${i + 1}(url) → bit ${p}`).join("   ·   ");
-    result.textContent = `Added. ${fresh.length ? `Bits ${fresh.join(", ")} turned on.` : "All its bits were already on."} Every future mail with this URL is now blocked.`;
-    result.dataset.kind = "blocked";
+    say("added", `${fresh.length ? `Bits ${fresh.join(", ")} turned on.` : "All its bits were already on."} Every future mail with this URL is now blocked.`);
     paint(pos, fresh);
   });
   root.querySelector('[data-act="fp"]').addEventListener("click", () => {
@@ -101,40 +106,47 @@ Demos.bloom = (root) => {
 };
 
 // ---------- Arkanoid project: the game, playable ----------
-// A small port of the Java game's rules: a pyramid of blocks, two balls, a paddle split into five
-// regions that set the bounce angle, a score with a bonus for clearing the level, and collision found
-// along each step's path (not just at the end position) so fast balls don't tunnel through blocks.
+// A browser port of the Java game (github.com/YehonatanAbramovitch/Arkanoid-Game), same numbers and rules:
+// an 800x600 field, three black balls moving (-5,-5) per frame at 60 FPS, an inverted pyramid of 57x30 blocks,
+// a 75px paddle that moves 5px per frame and wraps around at the walls, five paddle regions (300°, 330°,
+// straight reflect, 30°, 60°), and the color rule: breaking a block paints the ball in that block's color,
+// and a ball bounces off blocks of its own color without breaking them. 5 points a block, 100 for clearing.
 Demos.arkanoid = (root) => {
-  const W = 800, H = 500, WALL = 20, R = 6, SPEED = 380;
+  const W = 800, H = 600, R = 5, FRAME = 1000 / 60;
+  const C = { yellow: "#ffff00", white: "#ffffff", red: "#ff0000", blue: "#0000ff", green: "#00ff00", pink: "#ffafaf", dark: "#404040", gray: "#808080", black: "#000000" };
   root.innerHTML = `
-    <p class="lead">Move the paddle with the mouse, your finger or the arrow keys. Where the ball lands on the paddle sets the angle it leaves at.</p>
+    <p class="lead">The Java game, ported to the browser with the same rules. Three balls are in play; each one takes the color of
+      the last block it broke and bounces off blocks of its own color without breaking them. Move the paddle with the arrow keys,
+      the mouse or your finger.</p>
     <div class="ark">
-      <canvas width="${W}" height="${H}" tabindex="0" aria-label="Arkanoid game. Press Enter or Space to start, arrow keys to move."></canvas>
+      <canvas width="${W}" height="${H}" tabindex="0" aria-label="Arkanoid game. Press Enter or Space to start, arrow keys to move the paddle."></canvas>
       <button class="ark-overlay" type="button"><span>Click to play</span></button>
     </div>`;
   const canvas = root.querySelector("canvas"), ctx = canvas.getContext("2d");
   const overlay = root.querySelector(".ark-overlay");
   const panel = root.closest('[role="tabpanel"]');
-  const colors = ["#e9d64a", "#f2f2f2", "#e8413c", "#2f5fe0", "#3fcf4a", "#f2a3b3"];
-  let blocks, balls, paddle, score, state = "ready", raf = 0, last = 0, keys = { left: false, right: false };
+  // the frame of the field, as in Game.initialize(): top bar, side walls, and the bottom "death" block
+  const walls = [
+    { x: 0, y: 15, w: 800, h: 15, color: C.dark },
+    { x: 0, y: 0, w: 20, h: 555, color: C.dark },
+    { x: 780, y: 0, w: 20, h: 555, color: C.dark },
+  ];
+  const death = { x: 0, y: 565, w: 800, h: 50, color: C.dark };
+  let blocks, balls, paddle, score, state = "ready", raf = 0, last = 0, acc = 0, keys = { left: false, right: false }, pointerX = null;
 
   const reset = () => {
     blocks = [];
-    const bw = 50, bh = 22;
-    colors.forEach((color, row) => {
-      const count = 12 - row;
-      for (let c = 0; c < count; c++) blocks.push({ x: W - WALL - bw * (c + 1), y: 90 + row * bh, w: bw, h: bh, color });
-    });
-    paddle = { x: W / 2 - 55, y: H - 34, w: 110, h: 14 };
-    balls = [-25, 25].map((deg) => {
-      const a = (deg * Math.PI) / 180;
-      return { x: W / 2, y: H - 60, vx: SPEED * Math.sin(a), vy: -SPEED * Math.cos(a) };
-    });
+    [[1, 13, 30, C.yellow], [2, 12, 60, C.white], [3, 11, 90, C.red], [4, 10, 120, C.blue], [5, 9, 150, C.green], [6, 8, 180, C.pink]]
+      .forEach(([from, to, y, color]) => { for (let i = from; i < to; i++) blocks.push({ x: i * 57, y, w: 57, h: 30, color }); });
+    balls = [[400, 400], [300, 300], [500, 500]].map(([x, y]) => ({ x, y, vx: -5, vy: -5, color: C.black }));
+    paddle = { x: 400, y: 550, w: 75, h: 15 };
     score = 0;
   };
 
-  // segment (x,y)+(dx,dy) against a rectangle: returns the earliest entry time t in [0,1] and which face was hit
-  const hit = (x, y, dx, dy, r) => {
+  // the ball's path this frame as a segment, against a rectangle grown by the ball's radius:
+  // earliest entry time t in [0,1] and which face (x or y) it crosses
+  const hit = (x, y, dx, dy, o) => {
+    const r = { x: o.x - R, y: o.y - R, w: o.w + 2 * R, h: o.h + 2 * R };
     const slab = (p, d, lo, hi) => {
       if (d === 0) return p < lo || p > hi ? null : [-Infinity, Infinity];
       const a = (lo - p) / d, b = (hi - p) / d;
@@ -146,79 +158,100 @@ Demos.arkanoid = (root) => {
     if (tin > tout || tin < 0 || tin > 1) return null;
     return { t: tin, side: sx[0] > sy[0] ? "x" : "y" };
   };
-  const grow = (o) => ({ x: o.x - R, y: o.y - R, w: o.w + 2 * R, h: o.h + 2 * R });
-  const walls = [{ x: -100, y: 0, w: 100 + WALL, h: H }, { x: W - WALL, y: 0, w: 100 + WALL, h: H }, { x: 0, y: -100, w: W, h: 100 + WALL }];
+  const fromAngle = (deg, speed) => ({ vx: Math.sin((deg * Math.PI) / 180) * speed, vy: -Math.cos((deg * Math.PI) / 180) * speed });
 
-  const move = (b, dt) => {
-    let left = dt;
+  // one frame of Ball.moveOneStep(): find the closest collision on the path, stop just before it, take the new velocity
+  const step = (b) => {
+    let left = 1;
     for (let guard = 0; guard < 4 && left > 0; guard++) {
       const dx = b.vx * left, dy = b.vy * left;
       let best = null;
-      const consider = (o, kind) => { const h = hit(b.x, b.y, dx, dy, grow(o)); if (h && (!best || h.t < best.t)) best = { ...h, o, kind }; };
+      const consider = (o, kind) => { const h = hit(b.x, b.y, dx, dy, o); if (h && (!best || h.t < best.t)) best = { ...h, o, kind }; };
       walls.forEach((w) => consider(w, "wall"));
+      consider(death, "death");
       blocks.forEach((k) => consider(k, "block"));
-      if (b.vy > 0) consider(paddle, "paddle");
-      if (!best) { b.x += dx; b.y += dy; return; }
+      consider(paddle, "paddle");
+      if (!best) { b.x += dx; b.y += dy; return true; }
+      if (best.kind === "death") return false; // BallRemover
       const t = Math.max(0, best.t - 1e-4);
       b.x += dx * t; b.y += dy * t; left *= 1 - best.t;
-      if (best.kind === "paddle" && best.side === "y") {
-        // five regions, like the Java paddle: outer ones send the ball off at a steeper angle
+      if (best.kind === "paddle" && best.side === "y" && b.vy > 0) {
         const region = Math.min(4, Math.max(0, Math.floor(((b.x - paddle.x) / paddle.w) * 5)));
-        const deg = [-60, -30, 0, 30, 60][region];
-        const sp = Math.hypot(b.vx, b.vy), a = (deg * Math.PI) / 180;
-        if (deg === 0) b.vy = -Math.abs(b.vy); else { b.vx = sp * Math.sin(a); b.vy = -sp * Math.cos(a); }
-      } else if (best.side === "x") b.vx = -b.vx; else b.vy = -b.vy;
-      if (best.kind === "block") { blocks.splice(blocks.indexOf(best.o), 1); score += 5; }
+        const speed = Math.hypot(b.vx, b.vy);
+        if (region === 2) b.vy = -b.vy;
+        else Object.assign(b, fromAngle([300, 330, 0, 30, 60][region], speed));
+      } else if (best.side === "x") b.vx = -b.vx;
+      else b.vy = -b.vy;
+      if (best.kind === "block" && best.o.color !== b.color) {
+        // BlockRemover + ScoreTrackingListener: the ball takes the block's color, the block goes, +5
+        b.color = best.o.color;
+        blocks.splice(blocks.indexOf(best.o), 1);
+        score += 5;
+      }
     }
+    return true;
+  };
+
+  // Paddle.moveLeft / moveRight: 5px a frame, wrapping to the other side at the walls
+  const movePaddle = () => {
+    if (pointerX !== null) { paddle.x = Math.max(20, Math.min(780 - paddle.w, pointerX - paddle.w / 2)); return; }
+    if (keys.left) paddle.x = paddle.x - 5 <= 20 ? 780 - paddle.w : paddle.x - 5;
+    else if (keys.right) paddle.x = paddle.x + paddle.w >= 780 ? 20 : paddle.x + 5;
   };
 
   const draw = () => {
-    ctx.fillStyle = "#3c3c3c"; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = "#808080"; ctx.fillRect(WALL, WALL, W - 2 * WALL, H - WALL);
-    blocks.forEach((k) => { ctx.fillStyle = k.color; ctx.fillRect(k.x, k.y, k.w, k.h); ctx.strokeStyle = "#222"; ctx.strokeRect(k.x + .5, k.y + .5, k.w - 1, k.h - 1); });
-    ctx.fillStyle = "#f0c419"; ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
-    ctx.strokeStyle = "#222"; ctx.strokeRect(paddle.x + .5, paddle.y + .5, paddle.w - 1, paddle.h - 1);
-    ctx.fillStyle = "#fff"; balls.forEach((b) => { ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = "#111"; ctx.stroke(); });
-    ctx.fillStyle = "#fff"; ctx.fillRect(WALL, 0, W - 2 * WALL, WALL);
-    ctx.fillStyle = "#111"; ctx.font = "600 15px 'JetBrains Mono', monospace"; ctx.textAlign = "center";
-    ctx.fillText(`Score: ${score}`, W / 2, 15);
+    ctx.fillStyle = C.gray; ctx.fillRect(0, 0, W, H);
+    const rect = (o, fill, outline) => {
+      ctx.fillStyle = fill; ctx.fillRect(o.x, o.y, o.w, o.h);
+      if (outline) { ctx.strokeStyle = C.black; ctx.lineWidth = 1; ctx.strokeRect(o.x + .5, o.y + .5, o.w - 1, o.h - 1); }
+    };
+    [...walls, death].forEach((w) => rect(w, w.color, true));
+    blocks.forEach((k) => rect(k, k.color, true));
+    rect(paddle, C.black);
+    balls.forEach((b) => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, Math.PI * 2); ctx.fill(); });
+    // ScoreIndicator: a white strip with the score
+    ctx.fillStyle = C.white; ctx.fillRect(0, 0, 800, 15);
+    ctx.fillStyle = C.black; ctx.font = "16px Arial, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillText(`Score:${score}`, 350, 14);
   };
 
   const frame = (now) => {
     raf = 0;
-    if (panel.hidden || document.hidden) { state = state === "playing" ? "paused" : state; showOverlay(); return; }
-    const dt = Math.min(1 / 30, (now - last) / 1000); last = now;
-    const step = 460 * dt;
-    if (keys.left) paddle.x -= step;
-    if (keys.right) paddle.x += step;
-    paddle.x = Math.max(WALL, Math.min(W - WALL - paddle.w, paddle.x));
-    balls.forEach((b) => move(b, dt));
-    balls = balls.filter((b) => b.y < H + R * 2);
-    if (!blocks.length) { score += 100; state = "won"; }
-    else if (!balls.length) state = "lost";
+    if (panel.hidden || document.hidden) { if (state === "playing") state = "paused"; showOverlay(); return; }
+    acc += Math.min(250, now - last); last = now;
+    while (acc >= FRAME && state === "playing") {
+      acc -= FRAME;
+      movePaddle();
+      balls = balls.filter(step);
+      if (!blocks.length) { score += 100; state = "won"; }
+      else if (!balls.length) state = "lost";
+    }
     draw();
     if (state === "playing") raf = requestAnimationFrame(frame); else showOverlay();
   };
   const showOverlay = () => {
-    const text = { ready: "Click to play", paused: "Paused. Click to continue", won: `Cleared! Score ${score}. Play again`, lost: `Game over. Score ${score}. Play again` }[state];
-    overlay.querySelector("span").textContent = text;
+    overlay.querySelector("span").textContent = {
+      ready: "Click to play", paused: "Paused. Click to continue",
+      won: `Cleared! Score ${score}. Play again`, lost: `Game over. Score ${score}. Play again`,
+    }[state];
     overlay.hidden = false;
   };
   const start = () => {
     if (state === "won" || state === "lost") reset();
     state = "playing"; overlay.hidden = true; canvas.focus({ preventScroll: true });
-    last = performance.now();
+    last = performance.now(); acc = 0;
     if (!raf) raf = requestAnimationFrame(frame);
   };
 
   overlay.addEventListener("click", start);
   canvas.addEventListener("pointermove", (e) => {
     const r = canvas.getBoundingClientRect();
-    paddle.x = ((e.clientX - r.left) / r.width) * W - paddle.w / 2;
-    if (state !== "playing") { paddle.x = Math.max(WALL, Math.min(W - WALL - paddle.w, paddle.x)); draw(); }
+    pointerX = ((e.clientX - r.left) / r.width) * W;
+    if (state !== "playing") { movePaddle(); draw(); }
   });
+  canvas.addEventListener("pointerleave", () => { pointerX = null; });
   canvas.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); keys[e.key === "ArrowLeft" ? "left" : "right"] = true; }
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); pointerX = null; keys[e.key === "ArrowLeft" ? "left" : "right"] = true; }
     if ((e.key === "Enter" || e.key === " ") && state !== "playing") { e.preventDefault(); start(); }
   });
   canvas.addEventListener("keyup", (e) => {
