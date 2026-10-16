@@ -7,7 +7,7 @@ const SITE = {
   tagline: "Building software. Solving problems. Always learning.",
   status: "Open to student developer roles", // small tag above the greeting; leave empty to hide it
   email: "yona132132@gmail.com",
-  cvFile: "cv.pdf?v=2", // put your CV PDF next to index.html with this name
+  cvFile: "cv.pdf?v=3", // put your CV PDF next to index.html with this name
   photo: "",        // e.g. "me.jpg" - leave empty to show initials
   socials: {
     github: "https://github.com/YehonatanAbramovitch",
@@ -211,9 +211,12 @@ const SITE = {
     },
     {
       when: "2017 - 2020",
-      title: "Sergeant, C4I Department",
-      place: "IDF Artillery Corps",
-      text: "Managed embedded computing, electronics and encrypted wireless communication systems in mission-critical, real-time military environments.",
+      title: "Sergeant, Communications Security & Encryption Team Lead",
+      place: "Artillery Corps - Brigade C4I Department",
+      bullets: [
+        "Led a team of soldiers in the brigade's communications security section, responsible for the brigade's encrypted communication equipment.",
+        "Mapped and encrypted the brigade's communication devices, and configured military Motorola radios by loading SIM and crypto keys.",
+      ],
     },
   ],
 };
