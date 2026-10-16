@@ -80,6 +80,15 @@ function renderHome() {
   document.title = `${SITE.name} - ${SITE.role}`;
   $("name").textContent = SITE.name;
   $("tagline").textContent = SITE.tagline;
+  if (SITE.status) { $("statusText").textContent = SITE.status; $("status").hidden = false; }
+  $("copyBtn").onclick = async () => {
+    const btn = $("copyBtn");
+    try { await navigator.clipboard.writeText(SITE.email); btn.textContent = "Copied ✓"; }
+    catch { btn.textContent = "Couldn't copy"; }
+    btn.classList.add("done");
+    clearTimeout(btn._t);
+    btn._t = setTimeout(() => { btn.textContent = "Copy email"; btn.classList.remove("done"); }, 1800);
+  };
   $("avatar").innerHTML = SITE.photo ? `<img src="${esc(SITE.photo)}" alt="${esc(SITE.name)}">` : initials;
   $("cvBtn").href = SITE.cvFile;
   $("mailBtn").href = `mailto:${SITE.email}`;
@@ -113,8 +122,9 @@ function renderHome() {
            </button>`
         : `<div class="thumb">${esc(p.title[0])}</div>`}
       <div class="body">
-        <h4>${esc(p.title)}</h4>
-        ${list(p.bullets)}
+        ${p.details ? `<span class="card-meta mono">${esc(p.details.meta[0])}</span>` : ""}
+        <h4>${esc(p.short || p.title)}</h4>
+        ${p.summary ? `<p class="card-summary">${esc(p.summary)}</p>` : list(p.bullets)}
         ${chips(p.tags)}
         <div class="actions">
           ${p.details ? `<a class="btn small primary" href="project.html?id=${esc(p.id)}">View project →</a>` : ""}
@@ -175,9 +185,6 @@ function renderProject() {
   document.title = `${p.title} - ${SITE.name}`;
   document.body.style.setProperty("--accent", accents[idx % 4]);
 
-  const section = (n, title, html) => `
-    <section class="p-section reveal"><h3 class="section-title"><span class="mono">${n}</span> ${title}</h3>${html}</section>`;
-
   const arch = `
     <p class="lead">${esc(d.architecture.text)}</p>
     <div class="arch">
@@ -201,6 +208,14 @@ function renderProject() {
   const shots = `<div class="shots">${p.images.map((img, i) => `
     <figure style="--i:${i}"><button class="shot" data-i="${i}" aria-label="Enlarge: ${esc(img.caption)}"><img src="${esc(img.src)}" alt="${esc(img.caption)}" loading="lazy"></button>
     <figcaption>${esc(img.caption)}</figcaption></figure>`).join("")}</div>`;
+
+  const sub = (title, html) => `<div class="sub"><h3 class="sub-title">${title}</h3>${html}</div>`;
+  const tabs = [
+    { id: "overview", label: "Overview", html: sub("The problem", `<p class="lead">${esc(d.problem)}</p>`) + sub("My solution", `<p class="lead">${esc(d.solution)}</p>`) + sub("Key features", list(d.features, "features")) },
+    { id: "architecture", label: "Architecture", html: arch },
+    { id: "decisions", label: "Engineering decisions", html: challenges },
+    { id: "screenshots", label: "Screenshots", html: shots },
+  ];
 
   const links = `
     ${p.github ? `<a class="btn primary" href="${esc(p.github)}" target="_blank" rel="noopener">${icons.github} View code on GitHub</a>` : ""}
@@ -234,12 +249,12 @@ function renderProject() {
         ? `<div class="p-cover p-video">${demoVideo(p.video, p.title, true)}</div>`
         : p.images.length ? `<button class="p-cover shot" data-i="0" aria-label="Enlarge screenshot"><img src="${esc(p.images[0].src)}" alt="${esc(p.images[0].caption)}"></button>` : ""}
     </header>
-    ${section("01.", "The problem", `<p class="lead">${esc(d.problem)}</p>`)}
-    ${section("02.", "My solution", `<p class="lead">${esc(d.solution)}</p>`)}
-    ${section("03.", "Architecture", arch)}
-    ${section("04.", "Key features", list(d.features, "features"))}
-    ${section("05.", "Technical challenges", challenges)}
-    ${section("06.", "Screenshots", shots)}
+    <section class="p-section p-tabs">
+      <div class="tablist" role="tablist" aria-label="Project details">
+        ${tabs.map((t, i) => `<button role="tab" id="tab-${t.id}" aria-controls="panel-${t.id}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${t.label}</button>`).join("")}
+      </div>
+      ${tabs.map((t, i) => `<div class="tabpanel" role="tabpanel" id="panel-${t.id}" aria-labelledby="tab-${t.id}" tabindex="0" ${i === 0 ? "" : "hidden"}>${t.html}</div>`).join("")}
+    </section>
     <section class="p-section p-end reveal">
       <h3>Want to see how it works?</h3>
       <div class="cta">${links}</div>
@@ -248,6 +263,30 @@ function renderProject() {
     ${nextCard}`;
 
   document.querySelectorAll(".shot").forEach((b) => b.onclick = () => openLightbox(p.images, +b.dataset.i));
+
+  // tabs: click or arrow keys switch panels (standard ARIA tabs pattern)
+  const tabBtns = [...document.querySelectorAll('[role="tab"]')];
+  const select = (btn, focus) => {
+    tabBtns.forEach((b) => {
+      const on = b === btn;
+      b.setAttribute("aria-selected", on);
+      b.tabIndex = on ? 0 : -1;
+      $(b.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) btn.focus();
+    // if the tab row has scrolled away, bring it back so the new panel starts in view
+    const bar = document.querySelector(".tablist");
+    if (bar.getBoundingClientRect().top < 0) bar.scrollIntoView({ block: "start", behavior: reduceMotion ? "auto" : "smooth" });
+  };
+  tabBtns.forEach((b, i) => {
+    b.onclick = () => select(b);
+    b.onkeydown = (e) => {
+      const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (k) { e.preventDefault(); select(tabBtns[(i + k + tabBtns.length) % tabBtns.length], true); }
+      if (e.key === "Home") { e.preventDefault(); select(tabBtns[0], true); }
+      if (e.key === "End") { e.preventDefault(); select(tabBtns[tabBtns.length - 1], true); }
+    };
+  });
 }
 
 // ---------- screenshot lightbox ----------

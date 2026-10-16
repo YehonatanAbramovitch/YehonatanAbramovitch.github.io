@@ -5,6 +5,7 @@ const SITE = {
   name: "Yehonatan Abramovitch",
   role: "Computer Science Student & Developer",
   tagline: "Building software. Solving problems. Always learning.",
+  status: "Open to student developer roles", // small tag above the greeting; leave empty to hide it
   email: "yona132132@gmail.com",
   cvFile: "cv.pdf", // put your CV PDF next to index.html with this name
   photo: "",        // e.g. "me.jpg" - leave empty to show initials
@@ -32,6 +33,9 @@ const SITE = {
     {
       id: "gmail",
       title: "Gmail-Like Full-Stack Web & Mobile Application",
+      // short name and one-sentence summary for the project card on the home page
+      short: "Gmail-like email platform",
+      summary: "An email app with a React web client, an Android app and a Node.js API, plus a C++ service that filters malicious URLs.",
       bullets: [
         "Built the front end with React and JavaScript and the backend with Node.js/Express, using MongoDB for persistence.",
         "Designed and implemented 15+ REST API endpoints for users, mails, labels, and authentication.",
@@ -110,6 +114,8 @@ const SITE = {
     {
       id: "arkanoid",
       title: "Enhanced Arkanoid Game",
+      short: "Enhanced Arkanoid",
+      summary: "A Java brick-breaker built around reusable interfaces, collision detection and event-driven game rules.",
       bullets: [
         "Built and refactored the game in Java using OOP principles and reusable design patterns.",
         "Implemented collision detection, game logic, levels, sprites, and event-driven interactions.",

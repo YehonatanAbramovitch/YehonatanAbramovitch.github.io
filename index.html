@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=35">
+  <link rel="stylesheet" href="style.css?v=36">
   <!-- apply the saved theme before first paint so dark-mode visitors don't see a light flash -->
   <script>try{var t=localStorage.getItem("theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;if(sessionStorage.getItem("warp")){sessionStorage.removeItem("warp");document.documentElement.classList.add("warp-in")}}catch(e){}</script>
 </head>
@@ -41,8 +41,8 @@
     </button>
     <nav id="siteNav">
       <a href="#about">About</a>
-      <a href="#skills">Skills</a>
       <a href="#projects">Projects</a>
+      <a href="#skills">Skills</a>
       <a href="#experience">Experience</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -55,6 +55,7 @@
   <main id="top">
     <section class="hero">
       <div class="avatar" id="avatar"></div>
+      <p class="status" id="status" hidden><span class="dot" aria-hidden="true"></span><span id="statusText"></span></p>
       <p class="hello mono"><span class="role-wipe" style="--d:.3s; --wd:.6s"><span>Hi, I'm</span></span></p>
       <h1><span class="role-wipe" style="--d:.65s; --wd:.95s"><span id="name"></span></span></h1>
       <h2 class="role"><span class="role-wipe" style="--d:1.35s"><span id="role"></span></span></h2>
@@ -71,14 +72,14 @@
       <div id="aboutText" class="about-text"></div>
     </section>
 
-    <section id="skills" class="reveal">
-      <h3 class="section-title"><span class="mono">02.</span> Skills</h3>
-      <div id="skillGrid" class="skill-grid"></div>
+    <section id="projects" class="reveal">
+      <h3 class="section-title"><span class="mono">02.</span> Projects</h3>
+      <div id="projectGrid" class="projects"></div>
     </section>
 
-    <section id="projects" class="reveal">
-      <h3 class="section-title"><span class="mono">03.</span> Projects</h3>
-      <div id="projectGrid" class="projects"></div>
+    <section id="skills" class="reveal">
+      <h3 class="section-title"><span class="mono">03.</span> Skills</h3>
+      <div id="skillGrid" class="skill-grid"></div>
     </section>
 
     <section id="experience" class="reveal">
@@ -89,7 +90,10 @@
     <section id="contact" class="reveal contact">
       <h3 class="section-title"><span class="mono">05.</span> Let's talk</h3>
       <p>I'm open to new opportunities. My inbox is always open.</p>
-      <a class="btn primary big" id="mailBtn"></a>
+      <div class="mail-row">
+        <a class="btn primary big" id="mailBtn"></a>
+        <button class="btn copy" id="copyBtn" type="button">Copy email</button>
+      </div>
       <div class="socials" id="footSocials"></div>
     </section>
   </main>
@@ -107,7 +111,7 @@
   </dialog>
 
   <!-- bump ?v= on each update so browsers fetch fresh files -->
-  <script src="data.js?v=35"></script>
-  <script src="script.js?v=35"></script>
+  <script src="data.js?v=36"></script>
+  <script src="script.js?v=36"></script>
 </body>
 </html>
