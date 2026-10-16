@@ -393,7 +393,66 @@ button.thumb:hover img { transform: scale(1.05); }
 .arch-box strong { font-size: 1.1rem; }
 .arch-box .mono { font-size: .8rem; color: var(--accent); font-weight: 600; }
 .arch-box small { color: var(--muted); }
-.arch-arrow { font-size: 1.6rem; color: var(--muted); line-height: 1; }
+/* connectors between architecture layers: a packet runs down each one in turn and the layer it reaches lights up */
+.arch-link { position: relative; width: 2px; height: 46px; background: var(--border); }
+.arch-link span {
+  position: absolute; left: 50%; top: 0; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; opacity: 0;
+  background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent);
+  animation: packet 2.4s linear infinite; animation-delay: calc(var(--k) * .8s);
+}
+@keyframes packet {
+  0% { transform: translateY(-4px); opacity: 0; }
+  4% { opacity: 1; }
+  30% { transform: translateY(40px); opacity: 1; }
+  34%, 100% { transform: translateY(40px); opacity: 0; }
+}
+.arch-row .arch-box { animation: arrive 2.4s ease-out infinite; animation-delay: calc(var(--k) * .8s - .1s); }
+@keyframes arrive {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent), var(--shadow); }
+  8% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 35%, transparent), var(--shadow); }
+  30%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent), var(--shadow); }
+}
+
+/* Bloom filter demo */
+.bloom-form { display: grid; gap: 8px; margin: 22px 0 18px; }
+.bloom-form label { font-weight: 700; }
+.bloom-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.bloom-row input {
+  flex: 1 1 260px; min-width: 0; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--border);
+  background: var(--surface); color: var(--text); font: 500 1rem "JetBrains Mono", monospace;
+}
+.bloom-row input::placeholder { color: color-mix(in srgb, var(--muted) 80%, transparent); }
+.bloom-row input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
+.bloom-row .btn { cursor: pointer; font: inherit; font-weight: 700; }
+.bloom-fp { justify-self: start; border: 0; background: none; padding: 4px 0; color: var(--accent); font: 600 .9rem "Space Grotesk", sans-serif; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.bloom-bits { display: grid; grid-template-columns: repeat(16, 1fr); gap: 5px; max-width: 560px; }
+.bloom-bits span {
+  aspect-ratio: 1; border-radius: 5px; border: 1.5px solid var(--border); background: var(--surface);
+  transition: background-color .3s, transform .3s var(--ease-out), border-color .2s;
+}
+.bloom-bits span.on { background: color-mix(in srgb, var(--accent) 70%, var(--surface)); border-color: transparent; }
+.bloom-bits span.probe { border-color: var(--text); transform: scale(1.18); box-shadow: 0 0 0 2px var(--text); }
+.bloom-bits span.fresh { animation: pop .5s var(--ease-out); }
+@keyframes pop { 40% { transform: scale(1.4); } }
+.bloom-hashes { min-height: 1.4em; margin-top: 14px; font-size: .85rem; color: var(--muted); }
+.bloom-result { min-height: 3.2em; margin-top: 6px; padding: 12px 16px; border-radius: 12px; background: var(--surface); border: 2px solid var(--border); }
+.bloom-result[data-kind="clear"] { border-color: #2fbf71; }
+.bloom-result[data-kind="blocked"] { border-color: #e8413c; }
+.bloom-result[data-kind="fp"] { border-color: #e9a23b; }
+.bloom-list { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.bloom-list > .mono { font-size: .8rem; color: var(--muted); }
+.bloom-items { display: contents; }
+
+/* Arkanoid demo */
+.ark { position: relative; margin-top: 20px; border-radius: 14px; overflow: hidden; border: 2px solid var(--border); box-shadow: var(--shadow); }
+.ark canvas { display: block; width: 100%; height: auto; touch-action: none; }
+.ark canvas:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.ark-overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; border: 0; cursor: pointer;
+  background: rgba(20, 17, 31, .55); color: #fff; font: 700 1.2rem "Space Grotesk", sans-serif;
+}
+.ark-overlay[hidden] { display: none; }
+.ark-overlay span { padding: 12px 22px; border-radius: 999px; background: var(--accent); }
 
 .bullets.features { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px 28px; font-size: 1.05rem; }
 

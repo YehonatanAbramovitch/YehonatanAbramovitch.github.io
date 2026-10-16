@@ -180,15 +180,16 @@ function renderProject() {
   const arch = `
     <p class="lead">${esc(d.architecture.text)}</p>
     <div class="arch">
-      ${d.architecture.layers.map((row) => `
-        <div class="arch-row">
+      ${d.architecture.layers.map((row, r) => `
+        ${r ? `<div class="arch-link" style="--k:${r - 1}" aria-hidden="true"><span></span></div>` : ""}
+        <div class="arch-row" style="--k:${r}">
           ${row.map((b) => `
             <div class="arch-box">
               <strong>${esc(b.name)}</strong>
               <span class="mono">${esc(b.tech)}</span>
               ${b.note ? `<small>${esc(b.note)}</small>` : ""}
             </div>`).join("")}
-        </div>`).join('<div class="arch-arrow" aria-hidden="true">↓</div>')}
+        </div>`).join("")}
     </div>`;
 
   const challenges = `<div class="challenges">${d.challenges.map((c, i) => `
@@ -204,6 +205,7 @@ function renderProject() {
   const sub = (title, html) => `<div class="sub"><h3 class="sub-title">${title}</h3>${html}</div>`;
   const tabs = [
     { id: "overview", label: "Overview", html: sub("The problem", `<p class="lead">${esc(d.problem)}</p>`) + sub("My solution", `<p class="lead">${esc(d.solution)}</p>`) + sub("Key features", list(d.features, "features")) },
+    ...(d.interactive && Demos[d.interactive] ? [{ id: "try", label: d.interactive === "arkanoid" ? "Play it" : "Try it", html: `<div class="demo" data-demo="${d.interactive}"></div>` }] : []),
     { id: "architecture", label: "Architecture", html: arch },
     { id: "decisions", label: "Engineering decisions", html: challenges },
     { id: "screenshots", label: "Screenshots", html: shots },
@@ -265,6 +267,9 @@ function renderProject() {
       b.tabIndex = on ? 0 : -1;
       $(b.getAttribute("aria-controls")).hidden = !on;
     });
+    // start a demo the first time its tab is opened
+    const demo = $(btn.getAttribute("aria-controls")).querySelector("[data-demo]:not(.started)");
+    if (demo) { demo.classList.add("started"); Demos[demo.dataset.demo](demo); }
     if (focus) btn.focus();
     // if the tab row has scrolled away, bring it back so the new panel starts in view
     const bar = document.querySelector(".tablist");

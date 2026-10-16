@@ -24,7 +24,7 @@ const SITE = {
   skills: {
     "Languages": ["Python", "C++", "C", "Java", "JavaScript"],
     "Software & Web": ["React", "Node.js/Express", "REST APIs", "MongoDB", "JWT", "OOP"],
-    "Development & Testing": ["Data Structures & Algorithms", "Git", "Docker", "CMake"],
+    "Development": ["Data Structures & Algorithms", "Git", "Docker", "CMake"],
     "AI & ML Foundations": ["Machine Learning", "Neural networks", "Claude Code", "AI-assisted dev"],
     "Systems & Networking": ["Linux", "TCP/IP", "Grafana", "Zabbix"],
   },
@@ -59,6 +59,7 @@ const SITE = {
       ],
       details: {
         meta: ["Team project · 3 developers", "Web + Android", "Dockerized"],
+        interactive: "bloom", // adds a "Try it" tab with the live Bloom filter (demos.js)
         problem: "Email is one of the most-used applications in the world, and also a main channel for phishing and malicious links. The goal was to build a complete Gmail-like platform - accounts, inbox, labels, drafts and search across web and mobile - that also protects users by blocking known-malicious URLs before a message is ever delivered, without slowing the system down.",
         solution: "A multi-service system: a React web client and a native Android client talk to a Node.js/Express REST API backed by MongoDB. Every outgoing message is scanned by a dedicated C++ filtering server that keeps a Bloom filter of blacklisted URLs: checking a URL costs a fixed number of hash lookups, and only possible matches are confirmed against the exact blacklist. When a user marks a mail as spam, its URLs are added to the blacklist and blocked for everyone from then on. The backend and the web app run with a single docker compose command.",
         architecture: {
@@ -131,6 +132,7 @@ const SITE = {
       ],
       details: {
         meta: ["Solo project", "Java desktop game", "60 FPS target"],
+        interactive: "arkanoid", // adds a "Play it" tab with the game (demos.js)
         problem: "A brick-breaker game looks simple, but it is a great test of software design: many objects moving and colliding every frame, events that change the game state, and rules that must stay correct at high speed. The challenge was to build it so that adding new objects, behaviors or rules doesn't mean rewriting the game.",
         solution: "A clean, object-oriented Arkanoid in Java. Everything on screen is a Sprite, everything you can hit is a Collidable, and game rules (removing blocks, losing balls, scoring) are separate listeners that react to hit events instead of being hard-coded into the objects. Geometry, physics, objects and game rules each live in their own package.",
         architecture: {
