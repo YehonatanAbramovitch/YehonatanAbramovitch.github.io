@@ -23,9 +23,9 @@ const SITE = {
   skills: {
     "Languages": ["Python", "C++", "C", "Java", "JavaScript"],
     "Software & Web": ["React", "Node.js/Express", "REST APIs", "MongoDB", "JWT", "OOP"],
-    "Development & Testing": ["Data Structures & Algorithms", "Git", "Docker", "CMake", "GoogleTest", "Unit testing"],
+    "Development & Testing": ["Data Structures & Algorithms", "Git", "Docker", "CMake"],
     "AI & ML Foundations": ["Machine Learning", "Neural networks", "Claude Code", "AI-assisted dev"],
-    "Systems & Networking": ["Linux", "TCP/IP", "Grafana", "Zabbix", "Incident triage", "Production troubleshooting"],
+    "Systems & Networking": ["Linux", "TCP/IP", "Grafana", "Zabbix"],
   },
 
   projects: [

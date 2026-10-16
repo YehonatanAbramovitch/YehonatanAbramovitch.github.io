@@ -27,10 +27,9 @@ const skillIcons = {
   "MongoDB": "mongodb/mongodb-original", "Git": "git/git-original", "Docker": "docker/docker-original", "CMake": "cmake/cmake-original",
   "Linux": "linux/linux-original", "Grafana": "grafana/grafana-original",
   "REST APIs": "t:api", "JWT": "t:key", "OOP": "t:box-model-2", "Data Structures & Algorithms": "t:binary-tree",
-  "GoogleTest": "t:test-pipe", "Unit testing": "t:checklist", "Machine Learning": "t:brain",
+  "Machine Learning": "t:brain",
   "Neural networks": "t:topology-star-3", "Claude Code": "t:sparkles", "AI-assisted dev": "t:robot",
-  "TCP/IP": "t:network", "Zabbix": "t:activity-heartbeat", "Incident triage": "t:alert-triangle",
-  "Production troubleshooting": "t:bug",
+  "TCP/IP": "t:network", "Zabbix": "t:activity-heartbeat",
 };
 const skillIcon = (name) => {
   const k = skillIcons[name] || "t:code";
