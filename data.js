@@ -132,7 +132,7 @@ const SITE = {
       ],
       details: {
         meta: ["Solo project", "Java desktop game", "60 FPS target"],
-        interactive: "arkanoid", // adds a "Play it" tab with the game (demos.js)
+        interactive: "arkanoid", // adds a "Try it" tab with the game (demos.js)
         problem: "A brick-breaker game looks simple, but it is a great test of software design: many objects moving and colliding every frame, events that change the game state, and rules that must stay correct at high speed. The challenge was to build it so that adding new objects, behaviors or rules doesn't mean rewriting the game.",
         solution: "A clean, object-oriented Arkanoid in Java. Everything on screen is a Sprite, everything you can hit is a Collidable, and game rules (removing blocks, losing balls, scoring) are separate listeners that react to hit events instead of being hard-coded into the objects. Geometry, physics, objects and game rules each live in their own package.",
         architecture: {

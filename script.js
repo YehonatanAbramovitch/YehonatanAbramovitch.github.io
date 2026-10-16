@@ -205,7 +205,7 @@ function renderProject() {
   const sub = (title, html) => `<div class="sub"><h3 class="sub-title">${title}</h3>${html}</div>`;
   const tabs = [
     { id: "overview", label: "Overview", html: sub("The problem", `<p class="lead">${esc(d.problem)}</p>`) + sub("My solution", `<p class="lead">${esc(d.solution)}</p>`) + sub("Key features", list(d.features, "features")) },
-    ...(d.interactive && Demos[d.interactive] ? [{ id: "try", label: d.interactive === "arkanoid" ? "Play it" : "Try it", html: `<div class="demo" data-demo="${d.interactive}"></div>` }] : []),
+    ...(d.interactive && Demos[d.interactive] ? [{ id: "try", label: "Try it", html: `<div class="demo" data-demo="${d.interactive}"></div>` }] : []),
     { id: "architecture", label: "Architecture", html: arch },
     { id: "decisions", label: "Engineering decisions", html: challenges },
     { id: "screenshots", label: "Screenshots", html: shots },
