@@ -81,14 +81,6 @@ function renderHome() {
   $("name").textContent = SITE.name;
   $("tagline").textContent = SITE.tagline;
   if (SITE.status) { $("statusText").textContent = SITE.status; $("status").hidden = false; }
-  $("copyBtn").onclick = async () => {
-    const btn = $("copyBtn");
-    try { await navigator.clipboard.writeText(SITE.email); btn.textContent = "Copied ✓"; }
-    catch { btn.textContent = "Couldn't copy"; }
-    btn.classList.add("done");
-    clearTimeout(btn._t);
-    btn._t = setTimeout(() => { btn.textContent = "Copy email"; btn.classList.remove("done"); }, 1800);
-  };
   $("avatar").innerHTML = SITE.photo ? `<img src="${esc(SITE.photo)}" alt="${esc(SITE.name)}">` : initials;
   $("cvBtn").href = SITE.cvFile;
   $("mailBtn").href = `mailto:${SITE.email}`;
