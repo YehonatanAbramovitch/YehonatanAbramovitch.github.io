@@ -283,7 +283,7 @@ Demos.embed = (root) => {
   new ResizeObserver(fit).observe(wrap);
   setInterval(() => {
     try {
-      const h = frame.contentDocument.documentElement.scrollHeight;
+      const doc = frame.contentDocument, h = Math.ceil(doc.body.getBoundingClientRect().bottom + 24); // content height, so it can shrink too
       if (h && Math.abs(h - H) > 4) { H = h; fit(); }
     } catch {} // different origin (local preview): keep the default height
   }, 600);
