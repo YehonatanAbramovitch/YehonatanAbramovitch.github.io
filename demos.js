@@ -271,7 +271,7 @@ Demos.embed = (root) => {
     <div class="embed-wide"><div class="embed-frame"><iframe src="${src}" title="Live demo" allow="fullscreen"></iframe></div></div>
     <a class="back" href="${src}" target="_blank" rel="noopener">Open the lab in a new tab ↗</a>`;
   const wrap = root.querySelector(".embed-frame"), frame = wrap.querySelector("iframe");
-  let H = 2300;
+  let H = 900; // the lab fits one 1440x900 screen
   const fit = () => {
     const w = wrap.clientWidth;
     if (w < 760) { wrap.classList.add("native"); frame.style.cssText = ""; wrap.style.height = ""; return; }
