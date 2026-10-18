@@ -205,7 +205,7 @@ function renderProject() {
   const sub = (title, html) => `<div class="sub"><h3 class="sub-title">${title}</h3>${html}</div>`;
   const tabs = [
     { id: "overview", label: "Overview", html: sub("The problem", `<p class="lead">${esc(d.problem)}</p>`) + sub("My solution", `<p class="lead">${esc(d.solution)}</p>`) + sub("Key features", list(d.features, "features")) },
-    ...(d.interactive && Demos[d.interactive] ? [{ id: "try", label: "Try it", html: `<div class="demo" data-demo="${d.interactive}" data-src="${esc(p.demo || "")}"></div>` }] : []),
+    ...(d.interactive && Demos[d.interactive] ? [{ id: "try", label: "Try it", html: `<div class="demo" data-demo="${d.interactive}" data-src="${esc(d.embedUrl || p.demo || "")}"></div>` }] : []),
     { id: "architecture", label: "Architecture", html: arch },
     { id: "decisions", label: "Engineering decisions", html: challenges },
     { id: "screenshots", label: "Screenshots", html: shots },
@@ -257,6 +257,10 @@ function renderProject() {
     ${nextCard}`;
 
   document.querySelectorAll(".shot").forEach((b) => b.onclick = () => openLightbox(p.images, +b.dataset.i));
+  document.querySelectorAll(".shots img").forEach((img) => {
+    const mark = () => img.classList.toggle("tall", img.naturalHeight > img.naturalWidth * 1.2);
+    img.complete ? mark() : img.addEventListener("load", mark);
+  });
 
   // tabs: click or arrow keys switch panels (standard ARIA tabs pattern)
   const tabBtns = [...document.querySelectorAll('[role="tab"]')];
@@ -294,6 +298,8 @@ function showSlide(n, animate = true) {
   const img = lbImages[lbIndex];
   const el = $("lbImg");
   const apply = () => {
+    // full-page screenshots are shown at a readable width and scroll inside the gallery
+    el.onload = () => lb.classList.toggle("tall", el.naturalHeight > el.naturalWidth * 1.2);
     el.src = img.src;
     el.alt = img.caption;
     $("lbCaption").textContent = `${img.caption}  ·  ${lbIndex + 1} / ${lbImages.length}`;

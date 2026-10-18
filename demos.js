@@ -262,10 +262,30 @@ Demos.arkanoid = (root) => {
 };
 
 // ---------- projects with their own live demo: show it inside the page ----------
+// The demo is laid out at desktop size (1440px wide) and scaled to fit, so it looks exactly like the real site,
+// whole building included. On the live site it's the same origin, so the frame's height follows the page inside it.
 Demos.embed = (root) => {
-  const src = root.dataset.src;
+  const src = root.dataset.src, W = 1440;
   root.innerHTML = `
-    <p class="lead">The live lab, running inside this page. The interface is currently in Hebrew.</p>
-    <div class="embed"><iframe src="${src}" title="Live demo" loading="lazy" allow="fullscreen"></iframe></div>
+    <p class="lead">The live lab, running inside this page. Pick a problem, hide the world, and run the controller.</p>
+    <div class="embed-wide"><div class="embed-frame"><iframe src="${src}" title="Live demo" allow="fullscreen"></iframe></div></div>
     <a class="back" href="${src}" target="_blank" rel="noopener">Open the lab in a new tab ↗</a>`;
+  const wrap = root.querySelector(".embed-frame"), frame = wrap.querySelector("iframe");
+  let H = 2300;
+  const fit = () => {
+    const w = wrap.clientWidth;
+    if (w < 760) { wrap.classList.add("native"); frame.style.cssText = ""; wrap.style.height = ""; return; }
+    wrap.classList.remove("native");
+    const s = w / W;
+    frame.style.cssText = `width:${W}px; height:${H}px; transform:scale(${s})`;
+    wrap.style.height = `${Math.ceil(H * s)}px`;
+  };
+  new ResizeObserver(fit).observe(wrap);
+  setInterval(() => {
+    try {
+      const h = frame.contentDocument.documentElement.scrollHeight;
+      if (h && Math.abs(h - H) > 4) { H = h; fit(); }
+    } catch {} // different origin (local preview): keep the default height
+  }, 600);
+  fit();
 };

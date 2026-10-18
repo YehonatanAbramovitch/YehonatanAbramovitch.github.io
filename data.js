@@ -124,13 +124,19 @@ const SITE = {
       ],
       tags: ["Python", "JavaScript", "Reinforcement Learning", "A* Search", "Web Workers"],
       github: "https://github.com/YehonatanAbramovitch/Multi-Elevator-Ai",
-      demo: "https://yehonatanabramovitch.github.io/Multi-Elevator-Ai/",
+      demo: "",
+      video: { src: "images/elevator-demo.mp4", poster: "images/elevator-demo-poster.jpg", fit: "contain", bg: "#11141a" },
       images: [
-        { src: "images/elevator-lab.jpg", caption: "The lab: design the building, hide its dynamics, run the controller" },
+        { src: "images/elevator-shot2-running-e5_hard.jpg", caption: "Mid-run on e5_hard: a failed move triggers a replan, estimates converge toward the hidden values" },
+        { src: "images/elevator-shot3-finished-e5_hard.jpg", caption: "Everyone delivered in 20 steps; the random policy didn't finish in 500" },
+        { src: "images/elevator-shot4-benchmark-e5_hard.jpg", caption: "Comparison over 10 seeds: the controller finishes 10/10, the random policy 0/10" },
+        { src: "images/elevator-shot5-full-budget-rl_med.jpg", caption: "Full step budget on rl_med: the controller switches to delivering only the most profitable person" },
+        { src: "images/elevator-shot1-input-m4_hard.jpg", caption: "Designing a building (m4_hard): elevators, people and the hidden world" },
       ],
       details: {
         meta: ["Course project · Intro to AI", "Python + JavaScript", "Live browser lab"],
-        interactive: "embed", // the "Try it" tab shows the live lab (the project's demo URL) inside the page
+        interactive: "embed", // the "Try it" tab shows the live lab inside the page
+        embedUrl: "https://yehonatanabramovitch.github.io/Multi-Elevator-Ai/",
         problem: "Several elevators serve a building. Each reaches only some floors and has a weight limit, so some people must switch elevators on a shared floor. Actions can fail: an elevator may land on a random floor, a person may fail to board or exit, and every delivery pays a random reward. The controller sees the building but not the success rates or the rewards, and every action costs one step out of a fixed budget. It has to learn the hidden world while it is already working in it.",
         solution: "A controller that combines online learning with planning. After every action it checks what actually happened and updates success counts for each elevator and person, estimating every success rate as a Beta-posterior mean. Deliveries it hasn't seen yet are assumed to be valuable, so it explores them until real rewards replace the guess. On top of these estimates it plans with a weighted A* search in which an action that succeeds with probability p costs 1/p steps, and it replans when something fails or every few steps so new estimates get used. A browser lab runs a JavaScript port of the controller: you build a building, hide its dynamics, and watch the estimates converge to the true values while it delivers people, next to a random policy on the same world.",
         architecture: {
