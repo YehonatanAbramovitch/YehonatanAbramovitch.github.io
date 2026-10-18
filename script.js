@@ -235,7 +235,6 @@ function renderProject() {
   $("project").innerHTML = `
     <a class="back" href="index.html#projects">← All projects</a>
     <header class="p-hero">
-      <div class="meta">${d.meta.map((m) => `<span>${esc(m)}</span>`).join("")}</div>
       <h1>${esc(p.title)}</h1>
       ${chips(p.tags)}
       <div class="cta">${links}</div>
