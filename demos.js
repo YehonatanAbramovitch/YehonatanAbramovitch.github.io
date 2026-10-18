@@ -263,7 +263,7 @@ Demos.arkanoid = (root) => {
 
 // ---------- projects with their own live demo: show it inside the page ----------
 // The demo is laid out at desktop size (1440px wide) and scaled to fit, so it looks exactly like the real site,
-// whole building included. On the live site it's the same origin, so the frame's height follows the page inside it.
+// whole building included.
 Demos.embed = (root) => {
   const src = root.dataset.src, W = 1440;
   root.innerHTML = `
@@ -271,7 +271,7 @@ Demos.embed = (root) => {
     <div class="embed-wide"><div class="embed-frame"><iframe src="${src}" title="Live demo" allow="fullscreen"></iframe></div></div>
     <a class="back" href="${src}" target="_blank" rel="noopener">Open the lab in a new tab ↗</a>`;
   const wrap = root.querySelector(".embed-frame"), frame = wrap.querySelector("iframe");
-  let H = 900; // the lab fits one 1440x900 screen
+  const H = 900; // the lab is designed for one 1440x900 screen
   const fit = () => {
     const w = wrap.clientWidth;
     if (w < 760) { wrap.classList.add("native"); frame.style.cssText = ""; wrap.style.height = ""; return; }
@@ -281,11 +281,7 @@ Demos.embed = (root) => {
     wrap.style.height = `${Math.ceil(H * s)}px`;
   };
   new ResizeObserver(fit).observe(wrap);
-  setInterval(() => {
-    try {
-      const doc = frame.contentDocument, h = Math.ceil(doc.body.getBoundingClientRect().bottom + 24); // content height, so it can shrink too
-      if (h && Math.abs(h - H) > 4) { H = h; fit(); }
-    } catch {} // different origin (local preview): keep the default height
-  }, 600);
+  // the lab sizes itself to the window it's shown in, so the frame stays one fixed 1440x900 screen
+  // (following its height would make it grow without end)
   fit();
 };
