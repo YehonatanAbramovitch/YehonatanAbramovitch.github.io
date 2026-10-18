@@ -455,6 +455,7 @@ button.thumb:hover img { transform: scale(1.05); }
 /* embedded live demo */
 /* wider than the text column so the demo can show its desktop layout */
 .embed-wide { position: relative; left: 50%; transform: translateX(-50%); width: min(1320px, calc(100vw - 32px)); margin: 20px 0 12px; }
+.embed-lead { max-width: none; }
 .embed-frame { overflow: hidden; border-radius: 14px; border: 2px solid var(--border); box-shadow: var(--shadow); background: #11141a; }
 .embed-frame iframe { display: block; border: 0; transform-origin: 0 0; }
 .embed-frame.native iframe { width: 100%; height: 80vh; }

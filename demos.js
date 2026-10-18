@@ -267,7 +267,7 @@ Demos.arkanoid = (root) => {
 Demos.embed = (root) => {
   const src = root.dataset.src, W = 1440;
   root.innerHTML = `
-    <p class="lead">The live lab, running inside this page. Pick a problem, hide the world, and run the controller.</p>
+    <p class="lead embed-lead">The live lab, running inside this page. Pick a problem, hide the world, and run the controller.</p>
     <div class="embed-wide"><div class="embed-frame"><iframe src="${src}" title="Live demo" allow="fullscreen"></iframe></div></div>
     <a class="back" href="${src}" target="_blank" rel="noopener">Open the lab in a new tab ↗</a>`;
   const wrap = root.querySelector(".embed-frame"), frame = wrap.querySelector("iframe");
