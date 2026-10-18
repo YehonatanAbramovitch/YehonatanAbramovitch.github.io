@@ -113,6 +113,75 @@ const SITE = {
       },
     },
     {
+      id: "elevator",
+      title: "Multi-Elevator AI: Reinforcement-Learning Elevator Lab",
+      short: "Multi-Elevator AI",
+      summary: "A reinforcement-learning elevator controller that learns hidden success rates and rewards while planning with A*, in a live browser lab.",
+      bullets: [
+        "Controller that learns hidden success probabilities and rewards online and plans with weighted A*.",
+        "Browser lab where you design a building, hide its dynamics and watch the controller learn them.",
+        "JavaScript port verified against the Python original: all 27,000 actions match.",
+      ],
+      tags: ["Python", "JavaScript", "Reinforcement Learning", "A* Search", "Web Workers"],
+      github: "https://github.com/YehonatanAbramovitch/Multi-Elevator-Ai",
+      demo: "https://yehonatanabramovitch.github.io/Multi-Elevator-Ai/",
+      images: [
+        { src: "images/elevator-lab.jpg", caption: "The lab: design the building, hide its dynamics, run the controller" },
+      ],
+      details: {
+        meta: ["Course project · Intro to AI", "Python + JavaScript", "Live browser lab"],
+        interactive: "embed", // the "Try it" tab shows the live lab (the project's demo URL) inside the page
+        problem: "Several elevators serve a building. Each reaches only some floors and has a weight limit, so some people must switch elevators on a shared floor. Actions can fail: an elevator may land on a random floor, a person may fail to board or exit, and every delivery pays a random reward. The controller sees the building but not the success rates or the rewards, and every action costs one step out of a fixed budget. It has to learn the hidden world while it is already working in it.",
+        solution: "A controller that combines online learning with planning. After every action it checks what actually happened and updates success counts for each elevator and person, estimating every success rate as a Beta-posterior mean. Deliveries it hasn't seen yet are assumed to be valuable, so it explores them until real rewards replace the guess. On top of these estimates it plans with a weighted A* search in which an action that succeeds with probability p costs 1/p steps, and it replans when something fails or every few steps so new estimates get used. A browser lab runs a JavaScript port of the controller: you build a building, hide its dynamics, and watch the estimates converge to the true values while it delivers people, next to a random policy on the same world.",
+        architecture: {
+          text: "The algorithm was written in Python for the course environment. The lab runs a JavaScript port of the controller together with a copy of the environment's rules, inside a Web Worker so long A* searches never freeze the animation.",
+          layers: [
+            [
+              { name: "Lab interface", tech: "HTML · CSS · JavaScript", note: "building editor, playback, charts" },
+            ],
+            [
+              { name: "Web Worker", tech: "JavaScript", note: "runs the simulation off the main thread" },
+            ],
+            [
+              { name: "Controller", tech: "core.js · port of controller.py", note: "online estimates + weighted A*" },
+              { name: "Environment", tech: "port of the course rules", note: "elevators, failures, rewards" },
+            ],
+          ],
+        },
+        features: [
+          "Design the building: floors, elevators (reachable floors, capacity) and people, or start from one of 36 course problems",
+          "Hide the world: each elevator's and person's success chance and each delivery's possible rewards",
+          "Side panel with the chosen action, whether it worked, and the next steps of the A* plan",
+          "Every hidden number shown next to the controller's current estimate as it converges",
+          "Cumulative reward compared with a random policy on the same world and seed",
+          "One-click comparison averaging 10 runs against the random policy",
+          "Two run modes: stop when everyone has arrived, or run the full step budget as in the assignment",
+        ],
+        challenges: [
+          {
+            challenge: "Planning with success rates it has never been told.",
+            solution: "Every elevator and person keeps success/attempt counts, and each rate is estimated as the Beta-posterior mean (s+1)/(n+2). The planner turns a rate p into a cost of 1/p steps. The estimate is deterministic rather than sampled, so frequent replans after failures keep choosing a consistent route instead of thrashing.",
+          },
+          {
+            challenge: "Finding out which deliveries are worth the most.",
+            solution: "A person it hasn't delivered yet is assumed to be worth max(bonus, 1), so unexplored deliveries look attractive until real rewards replace the guess. In the full-budget mode it also compares delivering everyone with repeatedly delivering only the most profitable person, and switches strategy as its estimates change.",
+          },
+          {
+            challenge: "A bug that hid the last person's reward.",
+            solution: "When the last person of a round is delivered the building resets at once, so they reappear instead of disappearing, and the controller never noticed that delivery. Recognizing a delivery from the reward itself fixed it. Across 36 problems × 30 seeds, 24 problems improved, none got worse, and total reward rose by 5.6% (up to +70% on the hardest one).",
+          },
+          {
+            challenge: "Proving the browser version behaves exactly like the Python one.",
+            solution: "A script records the Python controller's observations and actions, and the JavaScript controller is fed the same observations. On all 36 problems × 2 seeds, all 27,000 actions match.",
+          },
+          {
+            challenge: "Matching Python's tie-breaking.",
+            solution: "Python iterates sets of floors in hash-table order (for example {2,4,6,8} comes out as 8,2,4,6), which decides ties in the search. The port reproduces CPython's set order; it matches on every set in the 36 problems and on 3,000 random sets.",
+          },
+        ],
+      },
+    },
+    {
       id: "arkanoid",
       title: "Enhanced Arkanoid Game",
       short: "Enhanced Arkanoid",

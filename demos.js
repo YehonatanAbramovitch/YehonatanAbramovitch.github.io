@@ -260,3 +260,12 @@ Demos.arkanoid = (root) => {
   });
   reset(); draw(); showOverlay();
 };
+
+// ---------- projects with their own live demo: show it inside the page ----------
+Demos.embed = (root) => {
+  const src = root.dataset.src;
+  root.innerHTML = `
+    <p class="lead">The live lab, running inside this page. The interface is currently in Hebrew.</p>
+    <div class="embed"><iframe src="${src}" title="Live demo" loading="lazy" allow="fullscreen"></iframe></div>
+    <a class="back" href="${src}" target="_blank" rel="noopener">Open the lab in a new tab ↗</a>`;
+};

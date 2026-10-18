@@ -448,6 +448,10 @@ button.thumb:hover img { transform: scale(1.05); }
 .bloom-list > .mono { font-size: .8rem; color: var(--muted); }
 .bloom-items { display: contents; }
 
+/* embedded live demo */
+.embed { margin-top: 20px; border-radius: 14px; overflow: hidden; border: 2px solid var(--border); box-shadow: var(--shadow); background: #0f1115; }
+.embed iframe { display: block; width: 100%; height: min(80vh, 820px); border: 0; }
+
 /* Arkanoid demo */
 .ark { position: relative; margin-top: 20px; border-radius: 14px; overflow: hidden; border: 2px solid var(--border); box-shadow: var(--shadow); }
 .ark canvas { display: block; width: 100%; height: auto; touch-action: none; }
